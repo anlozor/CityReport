@@ -27,12 +27,12 @@ servidor.get('/', (req, res) => {
 });
 
 // 5. Definimos el puerto
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Por si falla .env
 
 // 6. Conexión a BBDD
 
 // 7. Arrancar el servidor
 // Arrancamos el servidor y mandamos un mensaje a la terminal para comprobar que funciona
 servidor.listen(PORT, () => {
-    console.log('Servidor funcionando en puerto ${PORT}');
+    console.log(`Servidor funcionando en puerto ${PORT}`);
 });
