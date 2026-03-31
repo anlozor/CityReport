@@ -4,12 +4,14 @@
 // 2. Servidor
 // 3. Middlewares
 // 4. Rutas
-// 5. Conexión BBDD
-// 6. Arrancar servidor
+// 5. Puerto
+// 6. Conexión BBDD
+// 7. Arrancar servidor
 
 // 1. Librerías
 const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
+require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
 // 2. Servidor
 const servidor = express();
@@ -24,10 +26,12 @@ servidor.get('/', (req, res) => {
     res.send('API funcionando');
 });
 
-// Definimos el puerto
+// 5. Definimos el puerto
 const PORT = 3000;
 
-// 6. Arrancar el servidor
+// 6. Conexión a BBDD
+
+// 7. Arrancar el servidor
 // Arrancamos el servidor y mandamos un mensaje a la terminal para comprobar que funciona
 servidor.listen(PORT, () => {
     console.log('Servidor funcionando en puerto ${PORT}');
