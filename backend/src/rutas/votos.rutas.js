@@ -13,6 +13,7 @@ const express = require('express');
 const router = express.Router();
 
 // 3. Rutas
+// Obtener los votos
 router.get();
 
 // 4. Exportar
