@@ -14,7 +14,7 @@ const cors = require('cors'); // Para poder comunicar el frontend con el backend
 require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
 // Cargamos 
-const votosRuta = require("./rutas/votos.rutas");
+const votosRuta = require("./routes/votos.router");
 
 // 2. Servidor
 const app = express();
