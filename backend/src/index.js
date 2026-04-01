@@ -1,4 +1,4 @@
-// Núcleo del backend, aquí es donde se va a coordinar todo
+// Núcleo del backend, aquí es donde se va a coordinary conectar todo
 // Estructura:
 // 1. Librerías importadas
 // 2. Servidor
@@ -13,12 +13,17 @@ const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
 require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
+// Cargamos 
+const votosRuta = require("./rutas/votos.rutas");
+
 // 2. Servidor
 const app = express();
 
 // 3. Middlewares
 app.use(express.json()); // Permitimos recibir datos en formato JSON
 app.use(cors()); // Permitimos hacer peticiones desde el frontend
+
+app.use(votosRuta);
 
 // 4. Conexión a BBDD
 
