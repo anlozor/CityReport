@@ -14,7 +14,7 @@ const cors = require('cors'); // Para poder comunicar el frontend con el backend
 require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
 // Cargamos 
-const votosRuta = require("./routes/votos.router");
+const votosRouter = require("./routes/votos.router");
 
 // 2. Servidor
 const app = express();
@@ -23,7 +23,7 @@ const app = express();
 app.use(express.json()); // Permitimos recibir datos en formato JSON
 app.use(cors()); // Permitimos hacer peticiones desde el frontend
 
-app.use(votosRuta);
+app.use('/votos', votosRouter);
 
 // 4. Conexión a BBDD
 

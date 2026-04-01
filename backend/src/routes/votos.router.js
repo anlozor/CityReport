@@ -12,9 +12,19 @@ const express = require('express');
 // 2. Router
 const router = express.Router();
 
+// Middleware
+router.use((req, res, next) => {
+    next(); // La siguiente función a usar
+});
+
 // 3. Rutas
 // Obtener los votos
-router.get();
+router.get('/', (req, res) => {
+    return res.send('Listado de votos');
+});
+
+// Crear voto
+//router.post();
 
 // 4. Exportar
 module.exports = router;
