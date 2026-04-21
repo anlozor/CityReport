@@ -11,6 +11,7 @@
 // 1. Librerías
 const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
+const pool = require('./bd/bd'); // Para poder conectar con la base de datos
 require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
 // Cargamos 
@@ -35,6 +36,15 @@ app.get('/', (req, res) => {
 
 // 6. Definimos el puerto
 const PORT = process.env.PORT || 3000; // Por si falla .env
+
+// PRUEBA DE CONEXIÓN CON BD
+pool.query('SELECT NOW()', (err, result) => {
+    if (err) {
+        console.error('Error conectando a la BD', err);
+    } else {
+        console.log('BD conectada:', result.rows);
+    }
+});
 
 // 7. Arrancar el servidor
 // Arrancamos el servidor y mandamos un mensaje a la terminal para comprobar que funciona
