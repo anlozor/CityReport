@@ -23,10 +23,14 @@ const router = express.Router();
 // Obtener los votos
 router.get('/', async (req, res) => {
     try {
+        // Primero lanzamos la query y esperamos a que nos responda con await
         const result = await pool.query('SELECT * FROM voto');
+        // Enviamos estado de petición HTTP y resultado
         res.status(200).json(result.rows);
     } catch (error) {
+        // Emitimos error
         console.error('Error obteniendo votos:', error);
+        // Enviamos estado de error de petición HTTP junto con mensaje
         res.status(500).send('Error al obtener votos');
     }
 });

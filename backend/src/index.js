@@ -16,6 +16,7 @@ require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
 // Cargamos 
 const votosRouter = require("./routes/votos.router");
+const usuariosRouter = require("./routes/usuarios.router");
 
 // 2. Servidor
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.json()); // Permitimos recibir datos en formato JSON
 app.use(cors()); // Permitimos hacer peticiones desde el frontend
 
 app.use('/votos', votosRouter);
+app.use('/usuarios',usuariosRouter);
 
 // 4. Conexión a BBDD
 

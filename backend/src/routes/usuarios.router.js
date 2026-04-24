@@ -1,20 +1,45 @@
-// 1. Express
+// 1. Express y pool
 const express = require('express');
+const pool = require('../bd/bd');
 
 // 2. Router
 const router = express.Router();
 
 // 3. Rutas
 // GET -> obtener listado de usuarios
-router.get('/', (req, res) => {
-    return res.send('Listado de usuarios');
+router.get('/', async (req, res) => {
+    try {
+        // Primero la query
+        const result = await pool.query('SELECT * FROM usuario');
+        // Estado de petición HTTP y resultado
+        res.status(200).json(result.rows);
+    } catch (error) {
+        // Emitimos error
+        console.error('Error al obtener los usuarios');
+        // Estado error petición HTTP junto a mensaje
+        res.status(500).send('Error al obtener el listado de usuarios');
+    }
 });
 
 // GET -> obtener un usuario concreto
-router.get('/:id', (req, res) => {
-    const id = req.params.id;
+router.get('/:id', async (req, res) => {
+    try {
+        // Leemos el id
+        const id = req.params.id;
+        // Hacemos la query
+        const result = await pool.query('SELECT * FROM usuario WHERE id_usuario = $1', [id]);
+        // Comprobamos que nos ha devuelto algo y sino devolvemos error
+        if (result.rows.length === 0) {
+            return res.status(404).send('Usuario no encontrado');
+        }
+        // En caso contrario devolvemos la información encontrada
+        res.status(200).json(result.rows[0]);
 
-    return res.send(`Usuario con id ${id}`);
+    } catch (error) {
+        console.error('Error al buscar usuario:', error);
+        res.status(500).send('Error al buscar usuario');
+    }
+
 });
 
 // POST -> añadir un usuario nuevo
