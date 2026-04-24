@@ -20,7 +20,7 @@ const router = express.Router();
 //});
 
 // 3. Rutas
-// Obtener los votos
+//  GET -> Obtener los votos
 router.get('/', async (req, res) => {
     try {
         // Primero lanzamos la query y esperamos a que nos responda con await
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Crear voto
+// POST -> Crear voto
 router.post('/', async (req, res) => {
     try {
         const {usuario_id, incidencia_id} = req.body;
