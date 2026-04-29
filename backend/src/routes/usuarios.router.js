@@ -1,7 +1,7 @@
 // 1. Express, pool y bcrypt
 const express = require('express');
 const pool = require('../bd/bd');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 // 2. Router
 const router = express.Router();
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
         res.status(200).json(result.rows);
     } catch (error) {
         // Emitimos error
-        console.error('Error al obtener los usuarios');
+        console.error('Error al obtener los usuarios:', error);
         // Estado error petición HTTP junto a mensaje
         res.status(500).send('Error al obtener el listado de usuarios');
     }

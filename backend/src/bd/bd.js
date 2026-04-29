@@ -1,6 +1,6 @@
 // Archivo para la conexión entre backend y base de datos
 const {Pool} = require('pg'); // Importamos la librería pg (PostgreSQL)
-require('dotenv').config(); // Cargamos las variables de entorno
+//require('dotenv').config(); // Cargamos las variables de entorno
 
 // Creamos un pool de conexiones
 const pool = new Pool({

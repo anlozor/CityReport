@@ -9,14 +9,15 @@
 // 7. Arrancar servidor
 
 // 1. Librerías
+require('dotenv').config(); // Para poder cargar las variables del archivo .env
 const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
 const pool = require('./bd/bd'); // Para poder conectar con la base de datos
-require('dotenv').config(); // Para poder cargar las variables del archivo .env
 
-// Cargamos 
+// Cargamos routers
 const votosRouter = require("./routes/votos.router");
 const usuariosRouter = require("./routes/usuarios.router");
+const rolesRouter = require("./routes/roles.router");
 
 // 2. Servidor
 const app = express();
@@ -27,6 +28,7 @@ app.use(cors()); // Permitimos hacer peticiones desde el frontend
 
 app.use('/votos', votosRouter);
 app.use('/usuarios',usuariosRouter);
+app.use('/roles', rolesRouter);
 
 // 4. Conexión a BBDD
 
