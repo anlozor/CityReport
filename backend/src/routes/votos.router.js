@@ -14,11 +14,6 @@ const pool = require('../bd/bd');
 // 2. Router
 const router = express.Router();
 
-// Middleware
-//router.use((req, res, next) => {
-//    next(); // La siguiente función a usar
-//});
-
 // 3. Rutas
 //  GET -> Obtener los votos
 router.get('/', async (req, res) => {
@@ -43,6 +38,12 @@ router.post('/', async (req, res) => {
         // Control de error si alguna de las tres no está en el body
         if (!usuario_id || !incidencia_id) {
             return res.status(400).send('Faltan datos obligatorios');
+        }
+        // Comprobamos también aquí además de en la bd si el usuario ya ha hecho un voto en la incidencia
+        const existe = await pool.query(`SELECT 1 FROM voto WHERE usuario_id = $1 AND incidencia_id = $2`,
+            [usuario_id, incidencia_id]);
+        if (existe.rows.length > 0) {
+            return res.status(409).send('El usuario ya ha votado esta incidencia');
         }
 
         const result = await pool.query(
