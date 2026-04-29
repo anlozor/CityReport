@@ -1,6 +1,7 @@
-// 1. Express y pool
+// 1. Express, pool y bcrypt
 const express = require('express');
 const pool = require('../bd/bd');
+const bcrypt = require('bcryptjs');
 
 // 2. Router
 const router = express.Router();
@@ -57,11 +58,14 @@ router.post('/', async (req, res) => {
         if (existeNombre.rows.length > 0) {
             return res.status(409).send('Ya existe un usuario con el mismo nombre');
         }
+
+        // Hacemos el hash de la contraseña
+        const contraseñaHashed = await bcrypt.hash(contraseña, 10);
     
         // Hacemos la inserción del nuevo usuario
         const result = await pool.query(`INSERT INTO usuario (nombre, email, contraseña, rol_id, alias, fecha_registro) 
             VALUES ($1, $2, $3, $4, $5, CURRENT_DATE)
-            RETURNING *`, [nombre, email, contraseña, rol_id, alias]);
+            RETURNING *`, [nombre, email, contraseñaHashed, rol_id, alias]);
         // Devolvemos el estado HTTP y la información
         res.status(201).json(result.rows[0]);
     } catch (error) {
