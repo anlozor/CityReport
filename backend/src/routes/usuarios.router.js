@@ -75,16 +75,31 @@ router.post('/', async (req, res) => {
 });
 
 // PATCH -> actualizar datos de usuario
-//router.patch('/:id', (req, res) => {
-//    const {nombre} = req.body;
-//    if (!nombre) {
-//        return res.status(400).send();
-//    }
-    // Ahora tendríamos que buscar al usuario en la bd
-    // Comprobar que hay usuario y sino mandar un 404
-    // Y luego actualizar los campos
-    // Y termiar con un res.send();
-//});
+router.patch('/:id', async (req, res) => {
+    try {
+        const id = req.params.id; // Leemos el id
+        /*************PATCH FIJO ORIGINAL*************/
+        // Leemos los datos del body
+        const {nombre, email, contraseña, rol_id, alias} = req.body;
+        // Hasheamos contraseña
+        const contraseñaHashed = await bcrypt.hash(contraseña, 10);
+        // Buscamos al usuario en la bd para comprobar que existe
+        const existe = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
+        // Comprobamos que existe el usuario
+        if (existe.rows.length === 0) {
+            return res.status(404).send('El usuario no existe');
+        }
+        // Actualizamos los campos, en nuestro caso solo hemos hablado de cambiar la contraseña
+        // Pero está preparado para actualizar el resto de campos
+        const result = await pool.query(`UPDATE usuario SET contraseña = $1, alias = $3 WHERE id_usuario = $2 RETURNING *`,
+            [contraseñaHashed, id, alias]);
+        // Devolvemos estado de HTTP y resultado
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al actualizar usuario:', error);
+        res.status(500).send('Error al actualizar usuario');
+    }
+});
 
 // 4. Exportar
 module.exports = router;
