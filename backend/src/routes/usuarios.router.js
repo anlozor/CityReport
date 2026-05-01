@@ -2,6 +2,7 @@
 const express = require('express');
 const pool = require('../bd/bd');
 const bcrypt = require('bcrypt');
+const auth = require('../middlewares/auth.middleware');
 
 // 2. Router
 const router = express.Router();

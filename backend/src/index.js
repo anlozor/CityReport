@@ -13,6 +13,7 @@ require('dotenv').config(); // Para poder cargar las variables del archivo .env
 const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
 const pool = require('./bd/bd'); // Para poder conectar con la base de datos
+const auth = require('./middlewares/auth.middleware'); // Para usar el middleware de autenticación
 
 // Cargamos routers
 const votosRouter = require("./routes/votos.router");
