@@ -21,8 +21,6 @@ const auth = (req, res, next) => { // Aquí va la función
         // 5. Si algo falla, paramos y res.status()
         res.status(401).json('Error de token');
     }
-
-
 };
 
 // Exportamos la función
