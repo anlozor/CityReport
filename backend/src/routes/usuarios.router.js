@@ -1,15 +1,17 @@
-// 1. Express, pool y bcrypt
+// 1. Express, pool, bcrypt y middleware
 const express = require('express');
 const pool = require('../bd/bd');
 const bcrypt = require('bcrypt');
 const auth = require('../middlewares/auth.middleware');
+const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
+const {autorizarRol} = require('../middlewares/roles.middleware');
 
 // 2. Router
 const router = express.Router();
 
 // 3. Rutas
 // GET -> obtener listado de usuarios
-router.get('/', async (req, res) => {
+router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
         // Primero la query
         const result = await pool.query(`SELECT * FROM usuario`);
@@ -24,7 +26,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET -> obtener un usuario concreto
-router.get('/:id', async (req, res) => {
+router.get('/:id',auth, usuarioNoBloqueado, async (req, res) => {
     try {
         // Leemos el id
         const id = req.params.id;
