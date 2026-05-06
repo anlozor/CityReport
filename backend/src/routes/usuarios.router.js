@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
+const jwt = require('jsonwebtoken');
 
 // 2. Router
 const router = express.Router();
@@ -74,6 +75,46 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Error creando usuario:', error);
         res.status(500).send('Error al crear usuario');
+    }
+});
+
+// POST -> login de usuario
+router.post('/login', async (req, res) => {
+    try {
+        // Primero necesitamos los datos con los que el usuario hace login
+        const {email, contraseña} = req.body;
+        // Comprobamos que están todos los datos
+        if (!email || !contraseña) {
+            return res.status(400).send('Faltan datos para login');
+        }
+
+        // Buscamos al usuario en la BD y comprobaos que está en la BD
+        const existe = await pool.query(`SELECT * FROM usuario WHERE email = $1`, [email]);
+        if (existe.rows.length === 0) {
+            return res.status(404).send('Usuario no encontrado');
+        }
+
+        // Comprobamos qu la contraseña introducida coincide con la de la BD
+        const usuario = existe.rows[0];
+        const contraseñaCoincide = await bcrypt.compare(contraseña, usuario.contraseña);
+        if (!contraseñaCoincide) {
+            return res.status(400).send('Contraseña incorrecta');
+        }
+
+        // Creamos el JWT
+        const token = jwt.sign({
+            id_usuario: usuario.id_usuario,
+            rol_id: usuario.rol_id
+        }, process.env.JWT_SECRET, {expiresIn: '30m'});
+
+        // Mandamos la respuesta
+        res.json({
+            mensaje: 'Login correcto',
+            token
+        });
+    } catch (error) {
+        console.error('Error al hacer login:', error);
+        res.status(500).send('Error en login');
     }
 });
 
