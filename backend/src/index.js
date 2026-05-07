@@ -14,13 +14,13 @@ const express = require('express'); // Para crear el servidor backend
 const cors = require('cors'); // Para poder comunicar el frontend con el backend
 const pool = require('./bd/bd'); // Para poder conectar con la base de datos
 const auth = require('./middlewares/auth.middleware'); // Para usar el middleware de autenticación
-//const usuMid = require('./middlewares/usuarios.middleware'); // Para usar el middleware de usuarios
 const rol = require('./middlewares/roles.middleware'); // Para usar el middleware de roles
 
 // Cargamos routers
 const votosRouter = require("./routes/votos.router");
 const usuariosRouter = require("./routes/usuarios.router");
 const rolesRouter = require("./routes/roles.router");
+const imagenesRouter = require("./routes/imagenes.router");
 
 // 2. Servidor
 const app = express();
@@ -32,6 +32,7 @@ app.use(cors()); // Permitimos hacer peticiones desde el frontend
 app.use('/votos', votosRouter);
 app.use('/usuarios',usuariosRouter);
 app.use('/roles', rolesRouter);
+app.use('/imagenes', imagenesRouter);
 
 // 4. Conexión a BBDD
 
