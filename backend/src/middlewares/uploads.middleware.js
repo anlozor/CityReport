@@ -7,7 +7,7 @@ const tipoImagenPermitido = ['image/jpeg', 'image/png'];
 const multerUpload = multer({
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
-            cb(null,path.join(__dirname, '../uploads/')); // Guardamos las imágenes en la carpeta uploads dentro de backend
+            cb(null,path.join(__dirname, '../../uploads/')); // Guardamos las imágenes en la carpeta uploads dentro de backend
         },
         filename: (req, file, cb) => {
             const extension = path.extname(file.originalname); // Obtenemos la extensión del archivo

@@ -5,7 +5,7 @@ const usuarioNoBloqueado = async (req, res, next) => {
     // 1. Comprobación
     // Primero cogemos el usuario y luego comprobamos si existe y si está bloqueado
     const usuario = req.usuario;
-    console.log('req.usuario:', req.usuario);
+    //console.log('req.usuario:', req.usuario);
     if (!usuario) {
         return res.status(401).send('El usuario no se ha autenticado');
     }

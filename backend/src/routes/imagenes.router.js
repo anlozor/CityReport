@@ -1,16 +1,17 @@
 // 1. Express, pool y middleware
 const express = require('express');
 const pool = require('../bd/bd');
-const autorizarRol = require('../middlewares/roles.middleware');
-const usuarioNoBloqueado = require('../middlewares/usuarios.middleware');
-const upload = require('../middlewares/upload.middleware');
+const {autorizarRol} = require('../middlewares/roles.middleware');
+const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
+const auth = require('../middlewares/auth.middleware');
+const upload = require('../middlewares/uploads.middleware');
 
 // 2. Router
 const router = express.Router();
 
 // 3. Rutas
 // POST -> subir imágenes de una incidencia --> cualquier usuario
-router.post('/', usuarioNoBloqueado, upload.array('imagenes', 2), async (req, res) => {
+router.post('/', auth,usuarioNoBloqueado, upload.array('imagenes', 2), async (req, res) => {
     try {
         // Obtenemos las imágenes
         const imagenes = req.files;
@@ -27,10 +28,10 @@ router.post('/', usuarioNoBloqueado, upload.array('imagenes', 2), async (req, re
         // Array donde vamos a guardar las imágenes subidas
         const imagenesSubidas = [];
         // Insertamos las imágenes en la base de datos
-        for (const imagen in imagenes) {
+        for (const imagen of imagenes) {
             const imagenSubida = await pool.query(`INSERT INTO imagen (ruta, fecha_subida, usuario_id, incidencia_id, esta_eliminada)
                 VALUES ($1, CURRENT_DATE, $2, $3, $4) RETURNING *`, 
-                [imagenes[imagen].path, req.usuario.id_usuario, id_incidencia, false]);
+                [imagen.path, req.usuario.id_usuario, id_incidencia, false]);
             // Comprobamos que se ha insertado correctamente
             if (imagenSubida.rows.length === 0) {
                 return res.status(500).send('Error al subir la imagen');
