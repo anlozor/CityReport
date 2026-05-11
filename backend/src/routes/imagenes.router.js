@@ -48,13 +48,76 @@ router.post('/', auth,usuarioNoBloqueado, upload.array('imagenes', 2), async (re
         res.status(500).send('Error al subir las imágenes');
     }
 });
+
 // DELETE -> eliminar imágenes de una incidencia --> solo gestores
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
 try {
+    // Obtenemos la imagen a eliminar
+    const id_imagen = req.params.id;
+    // Comprobamos que la imagen existe
+    const imagen = await pool.query(`SELECT * FROM imagen WHERE id_imagen = $1`, [id_imagen]);
+    if (imagen.rows.length === 0) {
+        return res.status(404).send('Imagen no encontrada');
+    }
+    // Comprobamos que la imagen no está eliminada ya
+    if (imagen.rows[0].esta_eliminada) {
+        return res.status(400).send('La imagen ya está eliminada');
+    }
+    // Marcamos la imagen como eliminada (esta_eliminada, eliminado_por, fecha_eliminacion)
+    const imagenEliminada = await pool.query(`UPDATE imagen 
+        SET esta_eliminada = true, eliminado_por = $2, fecha_eliminacion = CURRENT_DATE 
+        WHERE id_imagen = $1 RETURNING *`, 
+        [id_imagen, req.usuario.id_usuario]);
+    // No vamos a eliminar la imagen del disco ya que un gestor avanzado al revisarlo puede decidir mantenerla,
+    // o bien el gestor que la eliminó puede haberse equivocado y así el gestor avanzado puede recuperarla
+    
+    // Comprobamos que se ha actualizado correctamente
+    if (imagenEliminada.rows.length === 0) {
+        return res.status(500).send('Error al eliminar la imagen');
+    }
+    res.status(200).json({
+        mensaje: 'Imagen eliminada correctamente',
+        imagen: imagenEliminada.rows[0]
+    });
     
 } catch (error) {
-    
+    console.error('Error al eliminar la imagen:', error);
+    res.status(500).send('Error al eliminar la imagen');
 }
+});
+
+// PATCH -> recuperar imágenes eliminadas de una incidencia --> solo gestores avanzados
+router.patch('/:id/recuperar', auth, usuarioNoBloqueado, autorizarRol(1), async (req, res) => {
+    try {
+        // Obtenemos la imagen a recuperar
+        const id_imagen = req.params.id;
+        // Comprobamos que la imagen existe
+        const imagen = await pool.query(`SELECT * FROM imagen WHERE id_imagen = $1`, [id_imagen]);
+        if (imagen.rows.length === 0) {
+            return res.status(404).send('Imagen no encontrada');
+        }
+        // Comprobamos que la imagen está eliminada
+        if (!imagen.rows[0].esta_eliminada) {
+            return res.status(400).send('La imagen no está eliminada');
+        }
+        // Marcamos la imagen como no eliminada (esta_eliminada, eliminado_por, fecha_eliminacion) --> RECUPERAMOS la imagen
+        const imagenRecuperada = await pool.query(`UPDATE imagen 
+            SET esta_eliminada = false, eliminado_por = NULL, fecha_eliminacion = NULL 
+            WHERE id_imagen = $1 RETURNING *`, [id_imagen]);
+        // Comprobamos que se ha actualizado correctamente
+        if (imagenRecuperada.rows.length === 0) {
+            return res.status(500).send('Error al recuperar la imagen');
+        }
+
+        res.status(200).json({
+            mensaje: 'Imagen recuperada correctamente',
+            imagen: imagenRecuperada.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error al recuperar la imagen:', error);
+        res.status(500).send('Error al recuperar la imagen');
+    }
 });
 
 // 4. Exportar
