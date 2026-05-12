@@ -21,6 +21,7 @@ const votosRouter = require("./routes/votos.router");
 const usuariosRouter = require("./routes/usuarios.router");
 const rolesRouter = require("./routes/roles.router");
 const imagenesRouter = require("./routes/imagenes.router");
+const estadosRouter = require("./routes/estados.router");
 
 // 2. Servidor
 const app = express();
@@ -33,6 +34,7 @@ app.use('/votos', votosRouter);
 app.use('/usuarios',usuariosRouter);
 app.use('/roles', rolesRouter);
 app.use('/imagenes', imagenesRouter);
+app.use('/estados', estadosRouter);
 
 // 4. Conexión a BBDD
 
