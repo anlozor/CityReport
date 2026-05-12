@@ -36,7 +36,7 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
         //if (estadoExiste.rows.length > 0) {
         //    return res.status(409).send('El estado ya existe');
         //}
-        
+
         // Comprobamos que el estado no existe ya en la BD con normalización
         // Utilizamos normalize('NFD') para eliminar acentos y otros caracteres especiales
         // Replace para eliminar los caracteres diacríticos
@@ -54,14 +54,6 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
     } catch (error) {
         console.error('Error al añadir el estado:', error);
         res.status(500).json({ error: 'Error al añadir el estado' });
-    }
-});
-// PATCH -> cambiar el estado de una incidencia --> solo gestores
-router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
-    try {
-        
-    } catch (error) {
-        
     }
 });
 
