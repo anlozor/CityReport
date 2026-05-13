@@ -18,7 +18,7 @@ router.get('/', auth, usuarioNoBloqueado, async (req, res) => {
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los estados:', error);
-        res.status(500).json({ error: 'Error al obtener los estados' });
+        res.status(500).send('Error al obtener los estados');
     }
 });
 
@@ -53,7 +53,7 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error al añadir el estado:', error);
-        res.status(500).json({ error: 'Error al añadir el estado' });
+        res.status(500).send('Error al añadir el estado');
     }
 });
 
