@@ -55,12 +55,53 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
     }
 });
 
-// POST -> añadir un nuevo comentario a una incidencia --> cualquier usuario para añadir un comentario a una incidencia
+// POST -> añadir un nuevo comentario a una incidencia --> cualquier usuario puede añadir un comentario a una incidencia
 router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
     try {
+        // Primero obtenemos del body los datos del nuevo comentario
+        const { texto, incidencia_id, es_anonimo} = req.body;
+        // Comprobamos que ninguno esté vacío
+        if (!texto || !incidencia_id ||es_anonimo === undefined) {
+            return res.status(400).send('Faltan datos obligatorios');
+        }
+
+        // Pulimos texto para evitar espacios en blanco al principio y al final y para evitar que el texto esté compuesto solo por espacios en blanco
+        const textoPulido = texto.trim();
+        // Comprobamos que el texto no está vacío después de pulirlo
+        if (textoPulido.length === 0) {
+            return res.status(400).send('El texto del comentario no puede estar vacío');
+        }
+        // Comprobamos que no se pasa de la longitud máxima de 250 caracteres
+        if (textoPulido.length > 250) {
+            return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
+        }
+        // Comprobamos que el texto no contiene palabras ofensivas
+        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
+        const textoNormalizado = textoPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
+        for (const palabra of textoNormalizado.split(' ')) {
+            if (palabrasOfensivas.includes(palabra)) {
+                return res.status(400).send('El texto del comentario contiene palabras ofensivas');
+            }
+        }
+
+        // Obtenemos también el usuario_id del token
+        const usuario_id = req.usuario.id_usuario;
         
+        // Comprobamos que la incidencia existe
+        const incidencia = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [incidencia_id]);
+        if (incidencia.rows.length === 0) {
+            return res.status(404).send('La incidencia no existe');
+        }
+
+        // Añadimos el nuevo comentario en la BD
+        const result = await pool.query(`INSERT INTO comentario (texto, fecha_creacion, usuario_id, incidencia_id, es_anonimo, esta_eliminado)
+        VALUES ($1, CURRENT_DATE, $2, $3, $4, false) RETURNING *`, [textoPulido, usuario_id, incidencia_id, es_anonimo]);
+        
+        res.status(201).json(result.rows[0]);
+
     } catch (error) {
-        
+        console.error('Error al añadir el comentario:', error);
+        res.status(500).send('Error al añadir el comentario');
     }
 });
 
