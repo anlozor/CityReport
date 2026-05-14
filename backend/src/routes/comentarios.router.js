@@ -95,7 +95,7 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
 
         // Añadimos el nuevo comentario en la BD
         const result = await pool.query(`INSERT INTO comentario (texto, fecha_creacion, usuario_id, incidencia_id, es_anonimo, esta_eliminado)
-        VALUES ($1, CURRENT_DATE, $2, $3, $4, false) RETURNING *`, [textoPulido, usuario_id, incidencia_id, es_anonimo]);
+        VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, false) RETURNING *`, [textoPulido, usuario_id, incidencia_id, es_anonimo]);
         
         res.status(201).json(result.rows[0]);
 
@@ -143,9 +143,60 @@ router.delete('/:id', auth, usuarioNoBloqueado, async (req, res) => {
 // PATCH -> editar un comentario --> autor de su propio comentario
 router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
     try {
+        // Primero obtenemos el comentario a editar
+        const id = req.params.id;
+        // Luego comprobamos que el comentario existe y no está eliminado ya
+        const comentarioExiste = await pool.query(`SELECT * FROM comentario WHERE id_comentario = $1`, [id]);
+        if (comentarioExiste.rows.length === 0) {
+            return res.status(404).send('El comentario no existe');
+        }
+        if (comentarioExiste.rows[0].esta_eliminado) {
+            return res.status(400).send('El comentario está eliminado y no se puede editar');
+        }
+        // Comprobamos que el usuario es el autor del comentario, sino no puede editar el comentario
+        const esAutor = Number(comentarioExiste.rows[0].usuario_id) === Number(req.usuario.id_usuario);
+        if (!esAutor) {
+            return res.status(403).send('No tienes permiso para editar este comentario');
+        }
+
+        // Comprobamos que el comentario no lleva más de 15 minutos creado, sino no se puede editar
+        const fechaActual = new Date();
+        const fechaCreacion = new Date(comentarioExiste.rows[0].fecha_creacion);
+        console.log(comentarioExiste.rows[0].fecha_creacion);
+        console.log(new Date(comentarioExiste.rows[0].fecha_creacion));
+        console.log(fechaActual);
+        const limiteTiempo = 15 * 60 * 1000; // 15 minutos en milisegundos
+        const diferenciaTiempo = fechaActual - fechaCreacion;
+        if (diferenciaTiempo > limiteTiempo) {
+            return res.status(400).send('Hace más de 15 minutos que se creó el comentario y no se puede editar');
+        }
+
+        // Obtenemos del body el nuevo texto del comentario y comprobamos que no está vacío, que no se pasa de la longitud máxima de 250 caracteres y que no contiene palabras ofensivas
+        const {texto} = req.body;
+        if (!texto) {
+            return res.status(400).send('Falta el texto del comentario');
+        }
+        const textoPulido = texto.trim();
+        if (textoPulido.length === 0) {
+            return res.status(400).send('El texto del comentario no puede estar vacío');
+        }
+        if (textoPulido.length > 250) {
+            return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
+        }
+        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
+        const textoNormalizado = textoPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
+        for (const palabra of textoNormalizado.split(' ')) {
+            if (palabrasOfensivas.includes(palabra)) {
+                return res.status(400).send('El texto del comentario contiene palabras ofensivas');
+            }
+        }
+        // Actualizamos el texto del comentario en la BD y rellenamos fecha_edicion y editado_por
+        const comentarioEditado = await pool.query(`UPDATE comentario SET texto = $1 WHERE id_comentario = $2 RETURNING *`, [textoPulido, id]);
+        res.status(200).json(comentarioEditado.rows[0]);
         
     } catch (error) {
-        
+        console.error('Error al editar el comentario:', error);
+        res.status(500).send('Error al editar el comentario');
     }
 });
 
