@@ -105,8 +105,43 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
     }
 });
 
-// DELETE -> eliminar un comentario --> solo gestores
-router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+// DELETE -> eliminar un comentario (ocultarlo) --> tanto gestores como el autor del comentario
+router.delete('/:id', auth, usuarioNoBloqueado, async (req, res) => {
+    try {
+        // Primero obtenemos el comentario a eliminar
+        const id = req.params.id;
+        // Comprobamos que el comentario existe y no está eliminado ya
+        const comentarioExiste = await pool.query(`SELECT * FROM comentario WHERE id_comentario = $1`, [id]);
+        if (comentarioExiste.rows.length === 0) {
+            return res.status(404).send('El comentario no existe');
+        }
+        if (comentarioExiste.rows[0].esta_eliminado) {
+            return res.status(400).send('El comentario ya está eliminado');
+        }
+
+        // Comprobamos si el usuario es el autor del comentario o un gestor, sino no puede eliminar el comentario
+        const esAutor = Number(comentarioExiste.rows[0].usuario_id) === Number(req.usuario.id_usuario);
+        const esGestor = Number(req.usuario.rol_id) === 1 || Number(req.usuario.rol_id) === 2;
+        if (!esAutor && !esGestor) {
+            return res.status(403).send('No tienes permiso para eliminar este comentario');
+        }
+
+        // Ocultamos el comentario en la bd con esta_eliminado = true y rellenamos fecha_eliminacion y eliminado_por
+        const comentarioEliminado = await pool.query(`UPDATE comentario SET esta_eliminado = true, eliminado_por = $1, fecha_eliminacion = CURRENT_DATE 
+            WHERE id_comentario = $2 RETURNING *`, [req.usuario.id_usuario, id]);
+        // Comprobamos que se ha actualizado correctamente
+        if (comentarioEliminado.rows.length === 0) {
+            return res.status(500).send('Error al eliminar el comentario');
+        }
+        res.status(200).json(comentarioEliminado.rows[0]);
+    } catch (error) {
+        console.error('Error al eliminar el comentario:', error);
+        res.status(500).send('Error al eliminar el comentario');
+    }
+});
+
+// PATCH -> editar un comentario --> autor de su propio comentario
+router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         
     } catch (error) {

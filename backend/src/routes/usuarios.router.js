@@ -176,5 +176,14 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
+// DELETE -> eliminar un usuario (ocultarlo) --> solo gestores
+router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+});
+
 // 4. Exportar
 module.exports = router;
