@@ -162,9 +162,6 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
         // Comprobamos que el comentario no lleva más de 15 minutos creado, sino no se puede editar
         const fechaActual = new Date();
         const fechaCreacion = new Date(comentarioExiste.rows[0].fecha_creacion);
-        console.log(comentarioExiste.rows[0].fecha_creacion);
-        console.log(new Date(comentarioExiste.rows[0].fecha_creacion));
-        console.log(fechaActual);
         const limiteTiempo = 15 * 60 * 1000; // 15 minutos en milisegundos
         const diferenciaTiempo = fechaActual - fechaCreacion;
         if (diferenciaTiempo > limiteTiempo) {

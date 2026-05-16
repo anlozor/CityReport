@@ -23,6 +23,7 @@ const rolesRouter = require("./routes/roles.router");
 const imagenesRouter = require("./routes/imagenes.router");
 const estadosRouter = require("./routes/estados.router");
 const comentariosRouter = require("./routes/comentarios.router");
+const categoriasRouter = require("./routes/categorias.router");
 
 // 2. Servidor
 const app = express();
@@ -37,6 +38,7 @@ app.use('/roles', rolesRouter);
 app.use('/imagenes', imagenesRouter);
 app.use('/estados', estadosRouter);
 app.use('/comentarios', comentariosRouter);
+app.use('/categorias', categoriasRouter);
 
 // 4. Conexión a BBDD
 
