@@ -61,9 +61,27 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
 // DELETE -> eliminar una categoría --> solo gestores
 router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
-        // HAY QUE COMPROBAR QUE NO HAY NINGUNA INCIDENCIA ASOCIADA A LA CATEGORÍA ANTES DE ELIMINARLA
-    } catch (error) {
+        // Obtenemos el id de la categoría a eliminar y el id del gestor que la elimina
+        const idCategoria = req.params.id;
+        const idGestor = req.usuario.id_usuario;
+        // Comprobamos que existe la categoría
+        const categoriaExiste = await pool.query(`SELECT * FROM categoria WHERE id_categoria = $1 AND esta_eliminada = false`, [idCategoria]);
+        if (categoriaExiste.rows.length === 0) {
+            return res.status(404).send('La categoría no existe');
+        }
+        // Comporbamos que no hay ninguna incidencia asociada a la categoría
+        const incidenciasAsociadas = await pool.query(`SELECT * FROM incidencia WHERE categoria_id = $1 AND esta_eliminada = false`, [idCategoria]);
+        if (incidenciasAsociadas.rows.length > 0) {
+            return res.status(400).send('No se puede eliminar la categoría porque tiene incidencias asociadas');
+        }
+        // Eliminamos la categoría (esta_eliminada = true, fecha_eliminacion, eliminado_por)
+        const result = await pool.query(`UPDATE categoria SET esta_eliminada = true, fecha_eliminacion = CURRENT_DATE, eliminado_por = $1 
+            WHERE id_categoria = $2 RETURNING *`, [idGestor, idCategoria]);
         
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al eliminar la categoría:', error);
+        res.status(500).send('Error al eliminar la categoría');
     }
 });
 
