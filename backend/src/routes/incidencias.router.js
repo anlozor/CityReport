@@ -1,9 +1,10 @@
-// 1. Express, pool y middleware
+// 1. Express, pool, middleware y controladores
 const express = require('express');
 const pool = require('../bd/bd');
 const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
+const {getIncidencias} = require('../controladores/incidencias.controlador');
 
 // 2. Router
 const router = express.Router();
@@ -20,6 +21,9 @@ const router = express.Router();
 // GET -> obtener listado de incidencias según proximidad --> Todos los usuarios
 // ****GET -> obtener listado de incidencias según fecha --> Todos los usuarios
 // ****GET -> obtener listado de incidencias históricas --> Todos los usuarios
+
+router.get('/', auth, usuarioNoBloqueado, getIncidencias);
+
 // POST -> añadir una incidencia nueva --> Todos los usuarios pueden crear una incidencia
 // PATCH -> editar una incidencia --> Solo gestores
 // Si se valida, hay que rellenar los campos correspondientes

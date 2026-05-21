@@ -15,6 +15,7 @@ const cors = require('cors'); // Para poder comunicar el frontend con el backend
 const pool = require('./bd/bd'); // Para poder conectar con la base de datos
 const auth = require('./middlewares/auth.middleware'); // Para usar el middleware de autenticación
 const rol = require('./middlewares/roles.middleware'); // Para usar el middleware de roles
+require('./cron/archivarCron'); // Para usar el cron de archivado de incidencias
 
 // Cargamos routers
 const votosRouter = require("./routes/votos.router");
