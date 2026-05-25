@@ -8,8 +8,11 @@ const pool = require('../bd/bd');
 const getIncidencias = async (req, res) => {
     try {
         // Lo mejor es construir la query final a trozos, para que sea más fácil montarla dependiendo de los parámetros que recibamos
-        let query = 'SELECT incidencia.* FROM incidencia';
-        let where = ['esta_eliminada = false'];
+        //let query = 'SELECT incidencia.* FROM incidencia';
+        // Como la intención es mostrar el número de votos que tiene cada incidencia, vamos a dividir query en select y from
+        let select = ['incidencia.*']; // De esta manera, si se selecciona el filtro de votos, podemos añadir el COUNT(voto.id_voto) AS num_votos al select para mostrarlo
+        let from = ['incidencia'];
+        let where = ['incidencia.esta_eliminada = false'];
         let values = [];
         let order = [];
         let join = [];
@@ -25,9 +28,9 @@ const getIncidencias = async (req, res) => {
 
         // Si recibimos el parámetro historicas = true, monstramos las históricas, sino, solo las "activas"
         if (historicas === 'true') {
-            where.push('fecha_archivado IS NOT NULL');
+            where.push('incidencia.fecha_archivado IS NOT NULL');
         } else {
-            where.push('fecha_archivado IS NULL');
+            where.push('incidencia.fecha_archivado IS NULL');
         }
 
         // Si recibimos estado, filtramos por estado
@@ -38,27 +41,30 @@ const getIncidencias = async (req, res) => {
             const estadosArray = Array.isArray(estado) ? estado : [estado];
             // Para evitar problemas con los índices, utilizamos el número de parámetros que ya tenemos en values 
             // para asignar el número correcto al parámetro de la query
-            where.push(`estado_id = ANY($${values.length + 1})`);
+            where.push(`incidencia.estado_id = ANY($${values.length + 1})`);
             values.push(estadosArray);
         }
 
         // Si recibimos fecha, ordenamos por fecha de creación,
         // de manera ascendente o descendente dependiendo del valor de fecha
         if (fecha) {
-            const ordenFecha = fecha === 'reciente' ? 'fecha_creacion DESC' : 'fecha_creacion ASC';
+            const ordenFecha = fecha === 'reciente' ? 'incidencia.fecha_creacion DESC' : 'incidencia.fecha_creacion ASC';
             order.push(ordenFecha);
         }
 
         // Si recibimos votos = true, ordenamos de manera descendente por prioridad
         // Aquí tenemos que empezar con JOIN en la query, ya que necesitamos acceder a la tabla votos
         if (votos === 'true') {
+            select.push('COUNT(voto.id_voto) AS num_votos');
             join.push('LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia');
-            order.push('COUNT(voto.id_voto) DESC');
+            order.push('num_votos DESC');
             groupBy.push('incidencia.id_incidencia');
         }
 
         // Construimos la query final
-        // Primero los JOIN
+        // Primero select y from
+        let query = 'SELECT ' + select.join(', ') + ' FROM ' + from.join(' ');
+        // Luego los JOIN
         if (join.length > 0) {
             query += ' ' + join.join(' ');
         }
