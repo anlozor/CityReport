@@ -16,11 +16,6 @@ const router = express.Router();
 // where esta_eliminada = false and fecha_archivado is null and fecha_resolucion is not null and fecha_resolucion <= current_date - interval '30 days'
 // GET -> obtener una incidencia concreta --> Todos los usuarios pueden ver cualquier incidencia
 // GET -> obtener listado de incidencias de un usuario concreto --> Solo gestores y el propio usuario
-// ****GET -> obtener listado de incidencias según categoría --> Todos los usuarios
-// ****GET -> obtener listado de incidencias según estado --> Todos los usuarios
-// GET -> obtener listado de incidencias según proximidad --> Todos los usuarios
-// ****GET -> obtener listado de incidencias según fecha --> Todos los usuarios
-// ****GET -> obtener listado de incidencias históricas --> Todos los usuarios
 
 router.get('/', auth, usuarioNoBloqueado, getIncidencias);
 

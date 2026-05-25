@@ -24,7 +24,7 @@ const getIncidencias = async (req, res) => {
         */
         // PEro nosotros buscamos hacer una query "dinámica" dependiendo de los parámetros que recibamos
         // Los parámetros son los filtros, que vendrán dados en req.query
-        const {votos, historicas, fecha, proximidad, estado} = req.query;
+        const {votos, historicas, fecha, proximidad, estado, lat, long} = req.query;
 
         // Si recibimos el parámetro historicas = true, monstramos las históricas, sino, solo las "activas"
         if (historicas === 'true') {
@@ -59,6 +59,24 @@ const getIncidencias = async (req, res) => {
             join.push('LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia');
             order.push('num_votos DESC');
             groupBy.push('incidencia.id_incidencia');
+        }
+
+        // Si recibimos proximidad, recibiremos algo estilo ?long=-3.58573&lat=40.73593&proximidad=500
+        if (proximidad && lat && long) {
+            // Primero obtenemos los índices de latitud, longitud y proximidad para la query, 
+            // ya que no sabemos lo que puede haber en la query y romper la lógica si los ponemos a mano como $1 $2
+            const longIndice = values.length + 1;
+            const latIndice = longIndice + 1;
+            const proximidadIndice = latIndice + 1;
+            // Ahora los añadimos en values en el mismo orden que los índices
+            values.push(long, lat, proximidad);
+            // Ahora añadimos la parte de la query (WHERE) que calcula los puntos que se encuentran dentro del rango de proximidad
+            // Para ello vamos a usar ST_DWithin y ST_MakePoit de PostGIS
+            // ST_DWithin(incidencia.ubicacion, ST_MakePoint(longitud, latitud)::geography, proximidad) -> utilizamos ::geography para convertir el punto a geografía y poder usar metros en proximidad
+            // ST_MakePoint lo que hace es crear un punto a partir de la longitud y latitud que le pasamos
+            // ST_DWithin lo que hace es comprobar si la ubicación de la incidencia está dentro del rango de proximidad que le pasamos, y devuelve true o false
+            where.push(`ST_DWithin(incidencia.ubicacion, 
+                ST_MakePoint($${longIndice}, $${latIndice})::geography, $${proximidadIndice})`);
         }
 
         // Construimos la query final
