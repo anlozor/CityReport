@@ -10,13 +10,13 @@ const getIncidencias = async (req, res) => {
         // Lo mejor es construir la query final a trozos, para que sea más fácil montarla dependiendo de los parámetros que recibamos
         //let query = 'SELECT incidencia.* FROM incidencia';
         // Como la intención es mostrar el número de votos que tiene cada incidencia, vamos a dividir query en select y from
-        let select = ['incidencia.*']; // De esta manera, si se selecciona el filtro de votos, podemos añadir el COUNT(voto.id_voto) AS num_votos al select para mostrarlo
+        let select = ['incidencia.*', 'COUNT(voto.id_voto) AS num_votos']; // De esta manera, si se selecciona el filtro de votos, podemos añadir el COUNT(voto.id_voto) AS num_votos al select para mostrarlo
         let from = ['incidencia'];
         let where = ['incidencia.esta_eliminada = false'];
         let values = [];
         let order = [];
-        let join = [];
-        let groupBy = [];
+        let join = ['LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia'];
+        let groupBy = ['incidencia.id_incidencia'];
 
         // Un get normal y sencillo sería así:
         /*const result = await pool.query('SELECT * FROM incidencia WHERE esta_eliminada = false');
@@ -24,7 +24,7 @@ const getIncidencias = async (req, res) => {
         */
         // PEro nosotros buscamos hacer una query "dinámica" dependiendo de los parámetros que recibamos
         // Los parámetros son los filtros, que vendrán dados en req.query
-        const {votos, historicas, fecha, proximidad, estado, lat, long} = req.query;
+        const {votos, historicas, fecha, proximidad, estado, lat, long, propias} = req.query;
 
         // Si recibimos el parámetro historicas = true, monstramos las históricas, sino, solo las "activas"
         if (historicas === 'true') {
@@ -34,9 +34,9 @@ const getIncidencias = async (req, res) => {
         }
 
         // Si recibimos estado, filtramos por estado
-        // Los valores serán: 1 = nueva, 2 = validada, 3 = en proceso, 4 = resuelta
+        // Los valores serán: 1 = nueva, 2 = validada, 3 = en proceso, 4 = resuelta (igual que en la BD para facilidad)
         // Si se selecciona más de un estado en el filtro, recibiremos un array de strings
-        // Por ejemplo: ?estado=nueva&estado=validada será estado = ['nueva', 'validada']
+        // Por ejemplo: ?estado=1&estado=2
         if (estado) {
             const estadosArray = Array.isArray(estado) ? estado : [estado];
             // Para evitar problemas con los índices, utilizamos el número de parámetros que ya tenemos en values 
@@ -52,13 +52,15 @@ const getIncidencias = async (req, res) => {
             order.push(ordenFecha);
         }
 
-        // Si recibimos votos = true, ordenamos de manera descendente por prioridad
+        // Si recibimos votos = true, ordenamos de manera descendente por numero de votos
         // Aquí tenemos que empezar con JOIN en la query, ya que necesitamos acceder a la tabla votos
+        // select.push('COUNT(voto.id_voto) AS num_votos');
+        // join.push('LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia');
+        // groupBy.push('incidencia.id_incidencia');
+        // Vamos a dejarlos mejor ya dentro de la query al principio, de esta manera siempre aparecerá el número de votos de cada incidencia
+        // Solo añadimos el orden cuando se selecciona el filtro de votos.
         if (votos === 'true') {
-            select.push('COUNT(voto.id_voto) AS num_votos');
-            join.push('LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia');
             order.push('num_votos DESC');
-            groupBy.push('incidencia.id_incidencia');
         }
 
         // Si recibimos proximidad, recibiremos algo estilo ?long=-3.58573&lat=40.73593&proximidad=500
@@ -71,12 +73,21 @@ const getIncidencias = async (req, res) => {
             // Ahora los añadimos en values en el mismo orden que los índices
             values.push(long, lat, proximidad);
             // Ahora añadimos la parte de la query (WHERE) que calcula los puntos que se encuentran dentro del rango de proximidad
-            // Para ello vamos a usar ST_DWithin y ST_MakePoit de PostGIS
+            // Para ello vamos a usar ST_DWithin y ST_MakePoint de PostGIS
             // ST_DWithin(incidencia.ubicacion, ST_MakePoint(longitud, latitud)::geography, proximidad) -> utilizamos ::geography para convertir el punto a geografía y poder usar metros en proximidad
             // ST_MakePoint lo que hace es crear un punto a partir de la longitud y latitud que le pasamos
             // ST_DWithin lo que hace es comprobar si la ubicación de la incidencia está dentro del rango de proximidad que le pasamos, y devuelve true o false
             where.push(`ST_DWithin(incidencia.ubicacion, 
                 ST_MakePoint($${longIndice}, $${latIndice})::geography, $${proximidadIndice})`);
+        }
+
+        // Si recibimos el parametro propias = true, filtramos para mostrar solo las incidencias creadas por el usuario que hace la petición
+        if (propias === 'true') {
+            // Para eso, necesitamos saber primero el id_usuario de quien está haciendo la petición, que obtenemos de req.usuario.id_usuario
+            const idUsuario = req.usuario.id_usuario;
+            const propiasIndice = values.length + 1;
+            where.push(`incidencia.usuario_id = $${propiasIndice}`);
+            values.push(idUsuario);
         }
 
         // Construimos la query final
