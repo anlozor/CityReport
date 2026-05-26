@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST -> Crear voto
+// POST -> Crear voto y actualizar prioridad de incidencia
 router.post('/', async (req, res) => {
     try {
         const {usuario_id, incidencia_id} = req.body;
@@ -51,6 +51,29 @@ router.post('/', async (req, res) => {
             VALUES ($1, $2, CURRENT_DATE)
             RETURNING *`, [usuario_id, incidencia_id]
         );
+
+        // Ahora recalculamos los votos de la incidencia tras el nuevo voto
+        const numVotosResult = await pool.query(`SELECT COUNT(*) FROM voto WHERE incidencia_id = $1`, [incidencia_id]);
+        const numVotos = Number(numVotosResult.rows[0].count); // Columna count convertida de string a número
+        // Calculamos la prioridad
+        // 0-9 = baja (1), 10-19 = media (2), +20 = alta (3)
+        let prioridad;
+        switch (true) {
+            case numVotos <= 9:
+                prioridad = 1;
+                break;
+            
+            case numVotos <= 19:
+                prioridad = 2;
+                break;
+        
+            default:
+                prioridad = 3;
+                break;
+        }
+        // Actualizamos incidencia.prioridad
+        const prioridadActualizada = await pool.query(`UPDATE incidencia SET prioridad = $1 WHERE id_incidencia = $2`, [prioridad, incidencia_id]);
+
         res.status(201).json(result.rows[0]);
 
     } catch (error) {
