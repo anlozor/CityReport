@@ -4,7 +4,7 @@ const pool = require('../bd/bd');
 const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
-const {getIncidencias} = require('../controladores/incidencias.controlador');
+const {getIncidencias, getIncidenciasUsuario} = require('../controladores/incidencias.controlador');
 
 // 2. Router
 const router = express.Router();
@@ -18,6 +18,7 @@ const router = express.Router();
 // GET -> obtener listado de incidencias de un usuario concreto --> Solo gestores y el propio usuario
 
 router.get('/', auth, usuarioNoBloqueado, getIncidencias);
+router.get('/usuario/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), getIncidenciasUsuario);
 
 // POST -> añadir una incidencia nueva --> Todos los usuarios pueden crear una incidencia
 // PATCH -> editar una incidencia --> Solo gestores

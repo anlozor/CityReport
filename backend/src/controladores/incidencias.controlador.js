@@ -129,10 +129,33 @@ const getIncidencias = async (req, res) => {
 };
 
 // getIncidenciasUsuario: función para obtener las incidencias de un usuario --> solo gestores
+const getIncidenciasUsuario = async (req, res) => {
+    try {
+        // Primero necesitamos leer el id del usuario del que queremos obtener las incidencias
+        const id = req.params.id;
+        // Hacemos la query
+        const result = await pool.query(`SELECT incidencia.*, COUNT (voto.id_voto) FROM incidencia 
+            LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia 
+            WHERE incidencia.usuario_id = $1 AND incidencia.esta_eliminada = false
+            GROUP BY incidencia.id_incidencia
+            ORDER BY incidencia.fecha_creacion DESC`, [id]);
+        // Comprobamos que nos ha devuelto algo
+        if (result.rows.length === 0) {
+            return res.status(404).send('No se encontraron incidencias para este usuario');
+        }
+        res.status(200).json(result.rows);
+        
+    } catch (error) {
+        console.error('Error al obtener las incidencias del usuario:', error);
+        res.status(500).send('Error al obtener las incidencias del usuario');
+    }
+};
+
 // getIncidenciasId: función para obtener la información de una incidencia --> todos los usuarios
 
 // 3. Exportar
 module.exports = {
     // Funciones a exportar
-    getIncidencias
+    getIncidencias,
+    getIncidenciasUsuario
 };
