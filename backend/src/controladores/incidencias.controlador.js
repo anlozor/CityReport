@@ -152,10 +152,54 @@ const getIncidenciasUsuario = async (req, res) => {
 };
 
 // getIncidenciasId: función para obtener la información de una incidencia --> todos los usuarios
+const getIncidenciaId = async (req, res) => {
+    try {
+        // Leemos el id de la incidencia sobre la que queremos obtener la información
+        const id = req.params.id;
+        // Hacemos las querys
+        // Primero la de la propia incidencia con el número de votos, el estado y la categoría
+        // Como cada incidencia tiene 1 estado y 1 catgeoría, podemos juntarlo en la misma query
+        const infoIncidencia = await pool.query(`SELECT incidencia.titulo, incidencia.descripcion, incidencia.fecha_creacion,
+            incidencia.fecha_actualizacion, incidencia.fecha_resolucion, incidencia.ubicacion, incidencia.direccion_texto,
+            incidencia.descripcion_resolucion, incidencia.fecha_validacion, incidencia.validada, categoria.nombre AS categoria,
+            estado_incidencia.nombre AS estado,
+            COUNT (voto.id_voto)::int AS num_votos
+            FROM incidencia
+            LEFT JOIN categoria ON categoria.id_categoria = incidencia.categoria_id
+            LEFT JOIN estado_incidencia ON estado_incidencia.id_estado = incidencia.estado_id
+            LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia
+            WHERE incidencia.id_incidencia = $1 AND incidencia.esta_eliminada = false
+            GROUP BY incidencia.id_incidencia, categoria.id_categoria, estado_incidencia.id_estado`, [id]);
+        if (infoIncidencia.rows.length === 0) {
+            return res.status(404).send('Incidencia no encontrada');
+        }
+        // La de comentarios
+        const comentarios = await pool.query(`SELECT comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
+            CASE WHEN comentario.es_anonimo = true THEN usuario.alias ELSE usuario.nombre END AS autor
+            FROM comentario
+            LEFT JOIN usuario ON usuario.id_usuario = comentario.usuario_id
+            WHERE incidencia_id = $1 AND esta_eliminado = false
+            ORDER BY comentario.fecha_creacion DESC`, [id]);
+
+        // La de imagenes
+        const imagenes = await pool.query(`SELECT * FROM imagen WHERE incidencia_id = $1 AND esta_eliminada = false`, [id]);
+
+        // Unimos las 3 partes
+        const incidenciaCompleta = {...infoIncidencia.rows[0], comentarios: comentarios.rows, imagenes: imagenes.rows};
+
+        res.status(200).json(incidenciaCompleta);
+        
+    } catch (error) {
+        console.error('Error al obtener la información de la incidencia:', error);
+        res.status(500).send('Error al obtener la información de la incidencia');
+        
+    }
+};
 
 // 3. Exportar
 module.exports = {
     // Funciones a exportar
     getIncidencias,
-    getIncidenciasUsuario
+    getIncidenciasUsuario,
+    getIncidenciaId
 };
