@@ -5,6 +5,7 @@ const {autorizarRol} = require('../middlewares/roles.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const auth = require('../middlewares/auth.middleware');
 const upload = require('../middlewares/uploads.middleware');
+const {guardarImagenes} = require('../helpers/imagenes.helper');
 
 // 2. Router
 const router = express.Router();
@@ -25,19 +26,9 @@ router.post('/', auth,usuarioNoBloqueado, upload.array('imagenes', 2), async (re
         if (!id_incidencia) {
             return res. status(400).send('Falta el id de la incidencia');
         }
-        // Array donde vamos a guardar las imágenes subidas
-        const imagenesSubidas = [];
-        // Insertamos las imágenes en la base de datos
-        for (const imagen of imagenes) {
-            const imagenSubida = await pool.query(`INSERT INTO imagen (ruta, fecha_subida, usuario_id, incidencia_id, esta_eliminada)
-                VALUES ($1, CURRENT_DATE, $2, $3, $4) RETURNING *`, 
-                [imagen.path, req.usuario.id_usuario, id_incidencia, false]);
-            // Comprobamos que se ha insertado correctamente
-            if (imagenSubida.rows.length === 0) {
-                return res.status(500).send('Error al subir la imagen');
-            }
-            imagenesSubidas.push(imagenSubida.rows[0]);
-        }
+        
+        const imagenesSubidas = await guardarImagenes(imagenes, req.usuario.id_usuario, id_incidencia);
+
         // Devolvemos las imágenes subidas
         res.status(201).json({
             mensaje: 'Imágenes subidas correctamente',

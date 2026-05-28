@@ -196,10 +196,31 @@ const getIncidenciaId = async (req, res) => {
     }
 };
 
+// postNuevaIncidencia: función para crear una nueva incidencia
+const postNuevaIncidencia = async (req, res) => {
+    try {
+        // Primero leemos de body todos los campos para crear una nueva incidencia
+        // Comprobamos que no falta ninguno
+        // Comprobamos longitud de texto, que la categoría existe, etc.
+        // Definimos los valores iniciales que no vienen dados por el usuario como estado, prioridad, etc.
+        // Como usamos PostGIS y en la bd tenemos la ubicación como geography(POINT, 4326), 
+        // debemos crear el punto con ST_MakePoint(long, lat)::geography
+        // Realizamos la query de la incidencia
+        // Comprobamos si hay imágenes (req.files), y si las hay las añadimos
+        // Devolvemos la petición HTTP con la incidncia guardada
+        
+    } catch (error) {
+        console.error('Error al crear nueva incidencia:', error);
+        res.status(500).send('Error al crear nueva incidencia');
+        
+    }
+};
+
 // 3. Exportar
 module.exports = {
     // Funciones a exportar
     getIncidencias,
     getIncidenciasUsuario,
-    getIncidenciaId
+    getIncidenciaId,
+    postNuevaIncidencia
 };
