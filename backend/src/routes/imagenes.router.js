@@ -12,7 +12,7 @@ const router = express.Router();
 
 // 3. Rutas
 // POST -> subir imágenes de una incidencia --> cualquier usuario
-router.post('/', auth,usuarioNoBloqueado, upload.array('imagenes', 2), async (req, res) => {
+router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), async (req, res) => {
     try {
         // Obtenemos las imágenes
         const imagenes = req.files;

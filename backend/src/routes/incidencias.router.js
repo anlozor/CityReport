@@ -6,6 +6,7 @@ const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const {getIncidencias, getIncidenciasUsuario, getIncidenciaId, 
     postNuevaIncidencia} = require('../controladores/incidencias.controlador');
+const upload = require('../middlewares/uploads.middleware');
 
 // 2. Router
 const router = express.Router();
@@ -23,7 +24,7 @@ router.get('/usuario/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), getInci
 router.get('/:id', auth, usuarioNoBloqueado, getIncidenciaId);
 
 // POST -> añadir una incidencia nueva --> Todos los usuarios pueden crear una incidencia
-//router.post('/', auth, usuarioNoBloqueado, postNuevaIncidencia);
+router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), postNuevaIncidencia);
 
 // PATCH -> editar una incidencia --> Solo gestores
 // Si se valida, hay que rellenar los campos correspondientes

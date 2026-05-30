@@ -1,6 +1,7 @@
 // Como el router de incidencias tiene mucha lógica, vamos a separar la lógica de las rutas
 // 1. Importar
 const pool = require('../bd/bd');
+const {guardarImagenes} = require('../helpers/imagenes.helper');
 
 // 2. Funciones
 
@@ -34,14 +35,14 @@ const getIncidencias = async (req, res) => {
         }
 
         // Si recibimos estado, filtramos por estado
-        // Los valores serán: 1 = nueva, 2 = validada, 3 = en proceso, 4 = resuelta (igual que en la BD para facilidad)
+        // Los valores serán: nueva, validada, en proceso, resuelta (igual que en la BD para facilidad)
         // Si se selecciona más de un estado en el filtro, recibiremos un array de strings
-        // Por ejemplo: ?estado=1&estado=2
+        // Por ejemplo: ?estado=nueva&estado=validada
         if (estado) {
             const estadosArray = Array.isArray(estado) ? estado : [estado];
             // Para evitar problemas con los índices, utilizamos el número de parámetros que ya tenemos en values 
             // para asignar el número correcto al parámetro de la query
-            where.push(`incidencia.estado_id = ANY($${values.length + 1})`);
+            where.push(`incidencia.estado_nombre = ANY($${values.length + 1})`);
             values.push(estadosArray);
         }
 
@@ -63,7 +64,7 @@ const getIncidencias = async (req, res) => {
             order.push('num_votos DESC');
         }
 
-        // Si recibimos proximidad, recibiremos algo estilo ?long=-3.58573&lat=40.73593&proximidad=500
+        // Si recibimos proximidad, recibiremos algo estilo ?lon=-3.58573&lat=40.73593&proximidad=500
         if (proximidad && lat && lon) {
             // Primero obtenemos los índices de latitud, longitud y proximidad para la query, 
             // ya que no sabemos lo que puede haber en la query y romper la lógica si los ponemos a mano como $1 $2
@@ -71,7 +72,7 @@ const getIncidencias = async (req, res) => {
             const latIndice = lonIndice + 1;
             const proximidadIndice = latIndice + 1;
             // Ahora los añadimos en values en el mismo orden que los índices
-            values.push(long, lat, proximidad);
+            values.push(lon, lat, proximidad);
             // Ahora añadimos la parte de la query (WHERE) que calcula los puntos que se encuentran dentro del rango de proximidad
             // Para ello vamos a usar ST_DWithin y ST_MakePoint de PostGIS
             // ST_DWithin(incidencia.ubicacion, ST_MakePoint(longitud, latitud)::geography, proximidad) -> utilizamos ::geography para convertir el punto a geografía y poder usar metros en proximidad
@@ -134,7 +135,8 @@ const getIncidenciasUsuario = async (req, res) => {
         // Primero necesitamos leer el id del usuario del que queremos obtener las incidencias
         const id = req.params.id;
         // Hacemos la query
-        const result = await pool.query(`SELECT incidencia.*, COUNT (voto.id_voto) FROM incidencia 
+        const result = await pool.query(`SELECT incidencia.*, COUNT (voto.id_voto) AS num_votos 
+            FROM incidencia 
             LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia 
             WHERE incidencia.usuario_id = $1 AND incidencia.esta_eliminada = false
             GROUP BY incidencia.id_incidencia
@@ -159,17 +161,12 @@ const getIncidenciaId = async (req, res) => {
         // Hacemos las querys
         // Primero la de la propia incidencia con el número de votos, el estado y la categoría
         // Como cada incidencia tiene 1 estado y 1 catgeoría, podemos juntarlo en la misma query
-        const infoIncidencia = await pool.query(`SELECT incidencia.titulo, incidencia.descripcion, incidencia.fecha_creacion,
-            incidencia.fecha_actualizacion, incidencia.fecha_resolucion, incidencia.ubicacion, incidencia.direccion_texto,
-            incidencia.descripcion_resolucion, incidencia.fecha_validacion, incidencia.validada, categoria.nombre AS categoria,
-            estado_incidencia.nombre AS estado,
+        const infoIncidencia = await pool.query(`SELECT incidencia.*,
             COUNT (voto.id_voto)::int AS num_votos
             FROM incidencia
-            LEFT JOIN categoria ON categoria.id_categoria = incidencia.categoria_id
-            LEFT JOIN estado_incidencia ON estado_incidencia.id_estado = incidencia.estado_id
             LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia
             WHERE incidencia.id_incidencia = $1 AND incidencia.esta_eliminada = false
-            GROUP BY incidencia.id_incidencia, categoria.id_categoria, estado_incidencia.id_estado`, [id]);
+            GROUP BY incidencia.id_incidencia`, [id]);
         if (infoIncidencia.rows.length === 0) {
             return res.status(404).send('Incidencia no encontrada');
         }
@@ -200,14 +197,92 @@ const getIncidenciaId = async (req, res) => {
 const postNuevaIncidencia = async (req, res) => {
     try {
         // Primero leemos de body todos los campos para crear una nueva incidencia
+        const {titulo, descripcion, direccion_texto, lon, lat, categoria} = req.body;
+        const usuario_id = req.usuario.id_usuario;
         // Comprobamos que no falta ninguno
+        if (!titulo || !direccion_texto || lon === undefined || lat === undefined || !categoria) {
+            return res.status(400).send('Faltan campos obligatorios');
+        }
         // Comprobamos longitud de texto, que la categoría existe, etc.
+        if (titulo.length > 100) {
+            return res.status(400).send('El título supera el límite, no debe sobrepasar los 100 caracteres');
+        } else if (descripcion.length > 250) {
+            return res.status(400).send('La descripción supera el límite, no debe sobrepasar los 250 caracteres');
+        } else if (direccion_texto.length > 100) {
+            return res.status(400).send('La dirección supera el límite, no debe sobrepasar los 100 caracteres');
+        }
+
+        // Comprobamos que el titulo y la descripción no contienen palabras ofensivas
+        const tituloPulido = titulo.trim();
+        const descripcionPulida = descripcion.trim();
+        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
+        const tituloNormalizado = tituloPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
+        const descripcionNormalizada = descripcionPulida.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
+        for (const palabra of tituloNormalizado.split(' ')) {
+            if (palabrasOfensivas.includes(palabra)) {
+                return res.status(400).send('El título contiene palabras ofensivas');
+            }
+        }
+        for (const palabra of descripcionNormalizada.split(' ')) {
+            if (palabrasOfensivas.includes(palabra)) {
+                return res.status(400).send('La descripción contiene palabras ofensivas');
+            }
+        }
+
+        // Las coordenadas deben estar en formato válido y estar dentro del rango de coordenadas
+        const longitud = Number(lon); // Los convertimos en número y lo dejamos preparado para la la comprobación y la query
+        const latitud = Number(lat);
+        const latValida = latitud >= -90 && latitud <= 90;
+        const lonValida = longitud >= -180 && longitud <= 180;
+        const coordsValidas = latValida && lonValida;
+        if (isNaN(longitud) || isNaN(latitud)) {
+            return res.status(400).send('El formato de las coordenadas no es válido');
+        } else if (!coordsValidas) {
+            return res.status(400).send('Las coordenadas no son válidas');
+        }
+
+        // Comprobamos que la categoría existe
+        // La idea es que el usuario seleccione una de un menú desplegable, por lo que viene ya el nombre de la bd y no hace falta normalizarlo
+        // No haría falta comprobarlo teniendo en cuenta lo que acabo de poner, pero por si acaso no está de más
+        const categValida = await pool.query(`SELECT 1 FROM categoria WHERE nombre = $1`, [categoria]);
+        if (categValida.rows.length === 0) {
+            return res.status(404).send('La categoría no existe');
+        }
+
         // Definimos los valores iniciales que no vienen dados por el usuario como estado, prioridad, etc.
+        //const fecha_creacion = CURRENT_DATE;
+        const estado = 'Nueva';
+        const prioridad = 1;
+        //const validada = false;
+        //const esta_eliminada = false;
+
         // Como usamos PostGIS y en la bd tenemos la ubicación como geography(POINT, 4326), 
-        // debemos crear el punto con ST_MakePoint(long, lat)::geography
+        // debemos crear el punto con ST_MakePoint(lon, lat)::geography en la query
+
         // Realizamos la query de la incidencia
+        const nuevaIncidencia = await pool.query(`INSERT INTO incidencia (titulo, descripcion, fecha_creacion, ubicacion, 
+            direccion_texto, categoria_nombre, estado_nombre, usuario_id, prioridad, validada, esta_eliminada)
+            VALUES ($1, $2, CURRENT_DATE, ST_MakePoint($3, $4)::geography, $5, $6, $7, $8, $9, false, false)
+            RETURNING *`, 
+            [titulo, descripcion, longitud, latitud, direccion_texto, categoria, estado, usuario_id, prioridad]);
+
         // Comprobamos si hay imágenes (req.files), y si las hay las añadimos
+        const imagenes = req.files;
+        let incidencia_id, imagenesSubidas = [];
+        if (imagenes && imagenes.length > 0) {
+            // Obtenemos el id de la incidencia
+            incidencia_id = nuevaIncidencia.rows[0].id_incidencia;
+            // Usamos guardarImagenes
+            imagenesSubidas = await guardarImagenes(imagenes, usuario_id, incidencia_id);
+
+        }
+
         // Devolvemos la petición HTTP con la incidncia guardada
+        res.status(201).json({
+            mensaje: 'Incidencia creada correctamente',
+            incidenciaNueva: nuevaIncidencia.rows[0],
+            imagenes: imagenesSubidas
+        });
         
     } catch (error) {
         console.error('Error al crear nueva incidencia:', error);
