@@ -180,8 +180,24 @@ router.patch('/:id', async (req, res) => {
 router.patch('/:id/desbloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
         // Primero leemos el id del usuario a desbloquear
+        const id = req.params.id;
+        // Comprobamos que el usuario existe
+        const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
+        if (usuarioExiste.rows.length === 0) {
+            return res.status(404).send('El usuario no existe');
+        }
+        // Comprobamos que no esté ya desbloqueado/sin bloquear
+        if (!usuarioExiste.rows[0].esta_bloqueado) {
+            return res.status(400).send('El usuario no está bloqueado');
+        }
+        // Modificamos los campos y lo desbloqueamos
+        const result = await pool.query(`UPDATE usuario SET esta_bloqueado = false, bloqueado_por = NULL, motivo_bloqueo = NULL, fecha_bloqueo = NULL WHERE id_usuario = $1`, [id]);
+        // Devolvemos HTTP y confirmación
+        res.status(200).json({mensaje: 'Usuario desbloqueado'});
         
     } catch (error) {
+        console.error('Error al desbloquear el usuario:', error);
+        res.status(500).send('Error al desbloquear el usuario');
         
     }
 });
@@ -209,7 +225,7 @@ router.patch('/:id/bloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
         // Marcamos el usuario como bloqueado rellenando esta_bloqueado, bloqueado_por, motivo_bloqueo y fecha_bloqueo
         const result = await pool.query('UPDATE usuario SET esta_bloqueado = true, bloqueado_por = $1, motivo_bloqueo = $2, fecha_bloqueo = CURRENT_DATE WHERE id_usuario = $3 RETURNING *', [idGestor, motivo_bloqueo, id]);
         // Devolvemos HTTP y confirmación
-        res.status(200).json(result.rows[0]);
+        res.status(200).json({mensaje: 'Usuario bloqueado'});
         
     } catch (error) {
         console.error('Error al bloquear el usuario:', error);
