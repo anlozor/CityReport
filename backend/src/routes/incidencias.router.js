@@ -27,10 +27,16 @@ router.get('/:id', auth, usuarioNoBloqueado, getIncidenciaId);
 router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), postNuevaIncidencia);
 
 // PATCH -> editar una incidencia --> Solo gestores
-// Si se valida, hay que rellenar los campos correspondientes
 // Si se archiva como histórica, se rellenan los campos correspondientes
-// PATCH -> cambiar estado de una incidencia --> Solo gestores
+// Si se resuelve, se rellenan los campos correspondientes
+// Si se cambia el estado, se rellenan los campos correspondientes y se tendría que hacer el update de cambio de estado
+
 // PATCH -> validar una incidencia --> Solo gestores
+// Si se valida, hay que rellenar los campos correspondientes
+
+// PATCH -> recuperar una incidencia eliminada --> Solo gestores
+// Habría que modificar los campos correspondientes y marcarla como no eliminada para que vuelva a aparecer
+
 // DELETE -> eliminar una incidencia --> Solo gestores
 
 // 4. Exportar router

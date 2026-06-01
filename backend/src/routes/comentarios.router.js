@@ -105,8 +105,8 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
     }
 });
 
-// DELETE -> eliminar un comentario (ocultarlo) --> tanto gestores como el autor del comentario
-router.delete('/:id', auth, usuarioNoBloqueado, async (req, res) => {
+// PATCH -> eliminar un comentario (ocultarlo) --> tanto gestores como el autor del comentario
+router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         // Primero obtenemos el comentario a eliminar
         const id = req.params.id;

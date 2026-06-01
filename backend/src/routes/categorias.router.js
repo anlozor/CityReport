@@ -23,9 +23,6 @@ router.get('/', auth, usuarioNoBloqueado, async (req, res) => {
     }
 });
 
-// GET -> obtener una categoría en específico (al buscar para una nueva incidencia, por ejemplo) --> cualquier usuario
-// Se puede buscar parte perteneciente al nombre poniendo en la query WHERE nombre ILIKE '%palabra%'
-
 // POST -> añadir una nueva categoría --> solo gestores
 router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {

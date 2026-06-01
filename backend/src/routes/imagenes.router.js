@@ -40,8 +40,8 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), async (r
     }
 });
 
-// DELETE -> eliminar imágenes de una incidencia (ocultarla) --> solo gestores
-router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+// PATCH -> eliminar imágenes de una incidencia (ocultarla) --> solo gestores
+router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
 try {
     // Obtenemos la imagen a eliminar
     const id_imagen = req.params.id;

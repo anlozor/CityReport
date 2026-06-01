@@ -176,11 +176,44 @@ router.patch('/:id', async (req, res) => {
     }
 });
 
-// DELETE -> eliminar un usuario (ocultarlo) --> solo gestores
-router.delete('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+// PATCH -> desbloquear un usuario --> solo gestores
+router.patch('/:id/desbloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
+        // Primero leemos el id del usuario a desbloquear
         
     } catch (error) {
+        
+    }
+});
+
+// PATCH -> eliminar un usuario (ocultarlo o bloquearlo) --> solo gestores
+router.patch('/:id/bloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+    try {
+        // Primero leemos el id del usuario a bloquear y el id del gestor
+        const id = req.params.id;
+        const idGestor = req.usuario.id_usuario;
+        // Obtenemos el motivo del bloqueo y comprobamos que no está vacío y que no se pasa del límite de 250 caracteres
+        const {motivo_bloqueo} = req.body;
+        if (!motivo_bloqueo || motivo_bloqueo.length > 250) {
+            return res.status(400).send('El motivo del bloqueo es obligatorio y no debe superar los 250 caracteres');
+        }
+        // Comprobamos que el usuario existe
+        const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
+        if (usuarioExiste.rows.length === 0) {
+            return res.status(404).send('El usuario no existe');
+        }
+        // Comprobamos que no esté ya bloqueado
+        if (usuarioExiste.rows[0].esta_bloqueado === true) {
+            return res.status(400).send('El usuario ya está bloqueado');
+        }
+        // Marcamos el usuario como bloqueado rellenando esta_bloqueado, bloqueado_por, motivo_bloqueo y fecha_bloqueo
+        const result = await pool.query('UPDATE usuario SET esta_bloqueado = true, bloqueado_por = $1, motivo_bloqueo = $2, fecha_bloqueo = CURRENT_DATE WHERE id_usuario = $3 RETURNING *', [idGestor, motivo_bloqueo, id]);
+        // Devolvemos HTTP y confirmación
+        res.status(200).json(result.rows[0]);
+        
+    } catch (error) {
+        console.error('Error al bloquear el usuario:', error);
+        res.status(500).send('Error al bloquear el usuario');
         
     }
 });
