@@ -182,16 +182,48 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
 
 // PATCH -> verificar activación de cuenta de gestor nueva --> solo gestores
 // Para comprobar el Id de gestor y el código de activación
-router.patch('/verificar-activacion', usuarioNoBloqueado, async (req, res) => {
+router.patch('/verificar-activacion', async (req, res) => {
     try {
         // Leemos del body el id y el codigo de activación
-        // Comprobamos que el id existe
+        const {codigo_activacion, identificador_gestor} = req.body;
+        if (!identificador_gestor || !codigo_activacion) {
+            return res.status(400).send('Faltan cmapos obligatorios');
+        }
+        // Comprobamos que el usuario existe
+        const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE identificador_gestor = $1`, [identificador_gestor]);
+        if (usuarioExiste.rows.length === 0) {
+            return res.status(404).send('El identificador no existe');
+        }
+        // Comprobamos que el usuario no está bloqueado
+        if (usuarioExiste.rows[0].esta_bloqueado) {
+            return res.status(403).send('El usuario está bloqueado');
+        }
         // Comprobamos que no está usado el código
-        // Comprobamos que el código del body corresponde con el que aparece en la solicitud de gestor (donde se le han mostrado las credenciales para la activación de la cuenta)
-        // Marcamos el código como usado y lo borramos 
+        if (usuarioExiste.rows[0].codigo_usado) {
+            return res.status(400).send('El código de activación ya ha sido usado');
+        }
+        // Comprobamos que el código de activación del body corresponde con el que aparece en el usuario en la bd
+        if (codigo_activacion !== usuarioExiste.rows[0].codigo_activacion) {
+            return res.status(400).send('El código de activación no es correcto');
+        }
+        // Marcamos el código como usado y lo borramos
+        const result = await pool.query(`UPDATE usuario SET codigo_usado = true, codigo_activacion = null 
+            WHERE identificador_gestor = $1 RETURNING *`, [identificador_gestor]);
         // Generamos un JWT temporal, por ejemplo de 10 minutos
+        const token = jwt.sign({
+            id_usuario: result.rows[0].id_usuario,
+            activacion: true
+        }, process.env.JWT_SECRET,
+        {expiresIn: '10m'});
+
+        res.status(200).json({
+            "mensaje": "Código verificado correctamente",
+            token
+        })
         
     } catch (error) {
+        console.error('Error al verificar el código:', error);
+        res.status(500).send('Error al verificar el código');
         
     }
 });
