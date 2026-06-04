@@ -7,6 +7,7 @@ const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const authActivacion = require('../middlewares/authActivacion.middleware');
 
 // 2. Router
 const router = express.Router();
@@ -217,7 +218,7 @@ router.patch('/verificar-activacion', async (req, res) => {
         {expiresIn: '10m'});
 
         res.status(200).json({
-            "mensaje": "Código verificado correctamente",
+            mensaje: "Código verificado correctamente",
             token
         })
         
@@ -230,17 +231,39 @@ router.patch('/verificar-activacion', async (req, res) => {
 
 // PATCH -> activar cuenta de gestor nueva --> solo gestores
 // Para establecer la contraseña del nuevo gestor
-router.patch('/establecer-contraseña', usuarioNoBloqueado, (req, res) => {
+router.patch('/establecer-contraseña', authActivacion, usuarioNoBloqueado, async (req, res) => {
     try {
         // Leemos del token temporal el id_usuario
-        // Comprobamos que activacion = true o resetContraseña = true
+        const id_usuario = req.usuario.id_usuario;
+        // Comprobamos que activacion = true o resetContraseña = true con authActivacion
         // Leemos del body la contraseña de los dos campos
+        const {contraseña1, contraseña2} = req.body;
+        if (!contraseña1 || !contraseña2) {
+            return res.status(400).send('Debes rellenar los dos campos');
+        }
         // Comprobamos que coinciden
+        if (contraseña1 !== contraseña2) {
+            return res.status(400).send('Las contraseñas deben coincidir');
+        }
         // Hacemos el hash de la contraseña
+        const contraseñaHashed = await bcrypt.hash(contraseña1, 10);
         // Actualizamos la contraseña
+        const result = await pool.query(`UPDATE usuario SET contraseña = $1 WHERE id_usuario = $2 RETURNING rol_id`, [contraseñaHashed, id_usuario]);
         // Generamos el JWT normal
+        const token = jwt.sign({
+            id_usuario: id_usuario,
+            rol_id: result.rows[0].rol_id
+        }, process.env.JWT_SECRET,
+        {expiresIn: '30m'});
+
+        res.status(200).json({
+            mensaje: "Contraseña cambiada correctamente",
+            token
+        });
         
     } catch (error) {
+        console.error('Error al cambiar la contraseña:', error);
+        res.status(500).send('Error al cambiar la contraseña');
         
     }
 });
