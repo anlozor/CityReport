@@ -244,9 +244,12 @@ router.post('/login', async (req, res) => {
             return res.status(404).send('Usuario no encontrado');
         }
         // Comprobamos que no está bloqueado
+        const usuario = existe.rows[0];
+        if (usuario.esta_bloqueado) {
+            return res.status(403).send('Usuario bloqueado');
+        }
 
         // Comprobamos qu la contraseña introducida coincide con la de la BD
-        const usuario = existe.rows[0];
         const contraseñaCoincide = await bcrypt.compare(contraseña, usuario.contraseña);
         if (!contraseñaCoincide) {
             return res.status(400).send('Contraseña incorrecta');
