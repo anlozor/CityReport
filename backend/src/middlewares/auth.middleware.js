@@ -19,6 +19,7 @@ const auth = (req, res, next) => { // Aquí va la función
         next();
     } catch (error) {
         // 5. Si algo falla, paramos y res.status()
+        console.error('Error de token:', error);
         res.status(401).json('Error de token');
     }
 };
