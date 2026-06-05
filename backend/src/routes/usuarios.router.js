@@ -8,6 +8,8 @@ const {autorizarRol} = require('../middlewares/roles.middleware');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const authActivacion = require('../middlewares/authActivacion.middleware');
+const {enviarRecuperacion} = require('../helpers/emailFunciones.helper');
+const validator = require('validator');
 
 // 2. Router
 const router = express.Router();
@@ -25,6 +27,21 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         console.error('Error al obtener los usuarios:', error);
         // Estado error petición HTTP junto a mensaje
         res.status(500).send('Error al obtener el listado de usuarios');
+    }
+});
+
+// GET -> cada usuario puede ver su propio perfil con sus datos
+router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
+    try {
+        const id = req.usuario.id_usuario;
+        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, usuario.alias, rol.nombre AS rol
+            FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
+        res.status(200).json(result.rows[0]);
+        
+    } catch (error) {
+        console.error('Error al obtener los datos del perfil:', error);
+        res.status(500).send('Error al obtener los datos del perfil');
+        
     }
 });
 
@@ -54,21 +71,6 @@ router.get('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res
 
 });
 
-// GET -> cada usuario puede ver su propio perfil con sus datos
-router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
-    try {
-        const id = req.usuario.id_usuario;
-        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, usuario.alias, rol.nombre AS rol
-            FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
-        res.status(200).json(result.rows[0]);
-        
-    } catch (error) {
-        console.error('Error al obtener los datos del perfil:', error);
-        res.status(500).send('Error al obtener los datos del perfil');
-        
-    }
-});
-
 // POST -> añadir un usuario nuevo
 router.post('/registro', async (req, res) => {
     try {
@@ -79,12 +81,18 @@ router.post('/registro', async (req, res) => {
         if (!nombre || !email || !contraseña) {
             return res.status(400).send('Faltan datos obligatorios');
         }
+        // Comprobamos que el correo tiene formato correcto
+        if (!validator.isEmail(email)) {
+            return res.status(400).send('El correo no tiene el formato correcto');
+        }
         // Se puede hacer una validación para comprobar que el usuario no existe ya en la BD(por ejemplo con el nombre)
         const existe = await pool.query(`SELECT nombre, email FROM usuario WHERE nombre = $1 OR email = $2`, [nombre, email]);
-        if (existe.rows[0].nombre === nombre) {
-            return res.status(409).send('Ya existe un usuario con el mismo nombre');
-        } else if (existe.rows[0].email === email) {
-            return res.status(409).send('Ya existe un usuario con el mismo email');
+        if (existe.rows.length > 0) {
+            if (existe.rows[0].nombre === nombre) {
+                return res.status(409).send('Ya existe un usuario con el mismo nombre');
+            } else if (existe.rows[0].email === email) {
+                return res.status(409).send('Ya existe un usuario con el mismo email');
+            }
         }
 
         // Hacemos el hash de la contraseña
@@ -113,6 +121,10 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
         } else if (rol_id !== 1 && rol_id !== 2) {
             return res.status(400).send('El rol debe ser gestor o gestor avanzado');
         }
+        // Comprobamos el formato del correo
+        if (!validator.isEmail(email)) {
+            return res.status(400).send('El correo no tiene el formato correcto');
+        }
 
         // Generamos contraseña aleatoria
         const contraseñaTemporal = crypto.randomBytes(8).toString('base64');
@@ -130,7 +142,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
         const alias = idGestor;
 
         // Generamos el código de activación
-        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz'; // Lista de caracteres para generar el código de activación
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // Lista de caracteres para generar el código de activación
         let codigo_activacion = '';
         // Como lo queremos de longitud 8, hacemos 8 iteraciones
         for (let i = 0; i < 8; i++) {
@@ -142,7 +154,6 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
         }
 
         //fecha_registro = CURRENT_DATE;
-        //es_gestor = true;
 
         // Si el usuario ya existe y se le da de alta como gestor por aprobación de solicitud de gestor,
         // solo hace falta modificar campos, no crear un usuario nuevo
@@ -150,7 +161,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
 
         if (existe.rows.length > 0) {
             const resultUsuario = await pool.query(`UPDATE usuario 
-                SET es_gestor = true, identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
+                SET identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
                 WHERE email = $5`, [idGestor, alias, rol_id, codigo_activacion, email]);
 
             res.status(200).json({
@@ -163,8 +174,8 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
 
             // Insertamos el nuevo usuario
             const result = await pool.query(`INSERT INTO usuario 
-                (nombre, email, rol_id, fecha_registro, es_gestor, contraseña, identificador_gestor, alias, codigo_activacion)
-                VALUES ($1, $2, $3, CURRENT_DATE, true, $4, $5, $6, $7) RETURNING *`, 
+                (nombre, email, rol_id, fecha_registro, contraseña, identificador_gestor, alias, codigo_activacion)
+                VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7) RETURNING *`, 
                 [nombre, email, rol_id, contraseñaHashed, idGestor, alias, codigo_activacion]);
         
             res.status(201).json({
@@ -231,7 +242,7 @@ router.patch('/verificar-activacion', async (req, res) => {
 
 // PATCH -> activar cuenta de gestor nueva --> solo gestores
 // Para establecer la contraseña del nuevo gestor
-router.patch('/establecer-contraseña', authActivacion, usuarioNoBloqueado, async (req, res) => {
+router.patch('/restablecer-contraseña', authActivacion, usuarioNoBloqueado, async (req, res) => {
     try {
         // Leemos del token temporal el id_usuario
         const id_usuario = req.usuario.id_usuario;
@@ -273,12 +284,38 @@ router.patch('/establecer-contraseña', authActivacion, usuarioNoBloqueado, asyn
 router.patch('/contraseña-olvidada', async (req, res) => {
     try {
         // Leemos del body el email
+        const {email} = req.body;
         // Comprobamos que no está vacío
+        if (!email) {
+            return res.status(400).send('Debes poner un email');
+        }
+        // Comprobamos el formato del correo
+        if (!validator.isEmail(email)) {
+            return res.status(400).send('El correo no tiene el formato correcto');
+        }
         // Comprobamos que existe en la bd
-        // Generamos un JWT temporal, por ejemplo de 15 minutos
-        // Enviamos mail con link y generamos mensaje del estilo "si existe una cuenta asociada al correo, se le mandará un enlace"
+        const existe = await pool.query(`SELECT id_usuario FROM usuario WHERE email = $1`, [email]);
+        // Sólo si existe el usuario generamos el token
+        if (existe.rows.length > 0) {
+            // Generamos un JWT temporal, por ejemplo de 15 minutos
+            const token = jwt.sign({
+                id_usuario: existe.rows[0].id_usuario,
+                resetContraseña: true
+            }, process.env.JWT_SECRET,
+            {expiresIn: '15m'});
+            // Enviamos mail con link
+            const enlace = `https://localhost:3000/usuarios/restablecer-contraseña?token=${token}`;
+            await enviarRecuperacion(email, enlace);
+
+        }
+        // Generamos mensaje del estilo "si existe una cuenta asociada al correo, se le mandará un enlace"  
+        res.status(200).json({
+            mensaje: 'Si existe una cuenta asociada al correo, se le mandará un enlace'
+        });
 
     } catch (error) {
+        console.error('Error al enviar enlace para restablecer contraseña:', error);
+        res.status(500).send('Error al enviar enlace para restablecer contraseña');
         
     }
 });
@@ -291,6 +328,10 @@ router.post('/login', async (req, res) => {
         // Comprobamos que están todos los datos
         if (!email || !contraseña) {
             return res.status(400).send('Faltan datos para login');
+        }
+        // Comprobamos que el correo tiene el formato correcto
+        if (!validator.isEmail(email)) {
+            return res.status(400).send('El correo no tiene el formato correcto');
         }
 
         // Buscamos al usuario en la BD y comprobaos que está en la BD
@@ -364,6 +405,9 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
             // Comprobamos si el campo que estamos leyendo de datos es contraseña para hashearla
             if (campo === 'contraseña') {
                 datos[campo] = await bcrypt.hash(datos[campo], 10);
+            }
+            if (campo === 'email' && !validator.isEmail(datos[campo])) {
+                return res.status(400).send('El formato del correo no es correcto');
             }
 
             campos.push(`${campo} = $${contador}`);
