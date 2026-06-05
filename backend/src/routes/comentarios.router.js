@@ -20,7 +20,7 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
                 return res.status(404).send('La incidencia no existe');
             }
         // Luego obtenemos los comentarios de la incidencia que no estén eliminados ordenados por fecha de creación de más reciente a más antiguo
-        const result = await pool.query(`SELECT comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, usuario.nombre, usuario.alias
+        const result = await pool.query(`SELECT comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, usuario.nombre, usuario.alias, usuario.identificador_gestor
             FROM comentario JOIN usuario ON comentario.usuario_id = usuario.id_usuario
             WHERE comentario.incidencia_id = $1 AND comentario.esta_eliminado = false
             ORDER BY comentario.fecha_creacion DESC`, [id]);
@@ -33,19 +33,19 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
         // Comprobamos si el usuario ha marcado como anónimo el comentario y si es así mostramos su alias en vez de su nombre
         const comentariosArreglados = [];
         for (const comentario of result.rows) { // Recorremos el array de comentarios
-            if (comentario.es_anonimo) { // si es anonimo, guardamos el alias
-                comentariosArreglados.push({
-                    texto: comentario.texto,
-                    fecha_creacion: comentario.fecha_creacion,
-                    autor: comentario.alias
-                });
+            let autor;
+            if (comentario.identificador_gestor) { // Si es gestor, siempre guardamos el identificador de gestor
+                autor = comentario.identificador_gestor;
+            } else if (comentario.es_anonimo) { // si es anonimo, guardamos el alias
+                autor = comentario.alias;
             } else { // si no es anonimo, guardamos el nombre
-                comentariosArreglados.push({
-                    texto: comentario.texto,
-                    fecha_creacion: comentario.fecha_creacion,
-                    autor: comentario.nombre
-                });
+                autor = comentario.nombre;
             }
+            comentariosArreglados.push({
+                texto: comentario.texto,
+                fecha_creacion: comentario.fecha_creacion,
+                autor: autor
+            });
         }
         // Luego enviamos la petición HTTP con el resultado si todo ha ido bien
         res.status(200).json(comentariosArreglados);
@@ -61,7 +61,7 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
         // Primero obtenemos del body los datos del nuevo comentario
         const { texto, incidencia_id, es_anonimo} = req.body;
         // Comprobamos que ninguno esté vacío
-        if (!texto || !incidencia_id ||es_anonimo === undefined) {
+        if (!texto || !incidencia_id || es_anonimo === undefined) {
             return res.status(400).send('Faltan datos obligatorios');
         }
 
@@ -106,7 +106,7 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
 });
 
 // PATCH -> eliminar un comentario (ocultarlo) --> tanto gestores como el autor del comentario
-router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
+router.patch('/:id/eliminar', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         // Primero obtenemos el comentario a eliminar
         const id = req.params.id;
@@ -141,7 +141,7 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
 });
 
 // PATCH -> editar un comentario --> autor de su propio comentario
-router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
+router.patch('/:id/editar', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         // Primero obtenemos el comentario a editar
         const id = req.params.id;
