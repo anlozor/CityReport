@@ -30,7 +30,7 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), postNuev
 // Si se archiva como histórica, se rellenan los campos correspondientes
 // Si se resuelve, se rellenan los campos correspondientes
 // Si se cambia el estado, se rellenan los campos correspondientes y se tendría que hacer el update de cambio de estado
-//router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIncidencia); // Solo para campos editables como título, categoría, estado, etc.
+router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIncidencia); // Solo para campos editables como título, categoría, estado, etc.
 
 // PATCH -> validar una incidencia --> Solo gestores
 // Si se valida, hay que rellenar los campos correspondientes
