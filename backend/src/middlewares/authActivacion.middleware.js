@@ -3,6 +3,7 @@
 // Comprobamos que payload.activacion === true o resetContraseña === true
 
 const jwt = require('jsonwebtoken');
+
 const authActivacion = (req, res, next) => {
     // 1. Leemos el header
     const authHeader = req.headers.authorization;
@@ -27,3 +28,5 @@ const authActivacion = (req, res, next) => {
         res.status(401).send('Error de token temporal');
     }
 };
+
+module.exports = authActivacion;

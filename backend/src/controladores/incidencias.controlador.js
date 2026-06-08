@@ -324,7 +324,7 @@ const patchEditarIncidencia = async (req, res) => {
             if (campo === 'descripcion') {
                 const descripcionNormalizada = pulirYNormalizarTexto(datos[campo]);
                 if (contienePalabrasOfensivas(descripcionNormalizada)) {
-                    return res.status(400).send('La descirpción contiene palabras ofensivas');
+                    return res.status(400).send('La descripción contiene palabras ofensivas');
                 }
                 if (datos[campo].length > 250) {
                     return res.status(400).send('El límite de la descripción son 250 caracteres');
