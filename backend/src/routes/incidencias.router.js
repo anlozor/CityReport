@@ -5,7 +5,7 @@ const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const {getIncidencias, getIncidenciasUsuario, getIncidenciaId, 
-    postNuevaIncidencia, patchEditarIncidencia} = require('../controladores/incidencias.controlador');
+    postNuevaIncidencia, patchEditarIncidencia, patchValidarIncidencia} = require('../controladores/incidencias.controlador');
 const upload = require('../middlewares/uploads.middleware');
 
 // 2. Router
@@ -29,11 +29,8 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), postNuev
 // PATCH -> editar una incidencia --> Solo gestores
 // Si se archiva como histórica, se rellenan los campos correspondientes
 // Si se resuelve, se rellenan los campos correspondientes
-// Si se cambia el estado, se rellenan los campos correspondientes y se tendría que hacer el update de cambio de estado
+// Si se cambia el estado, se rellenan los campos correspondientes y se tendría que hacer el post de cambio de estado
 router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIncidencia); // Solo para campos editables como título, categoría, estado, etc.
-
-// PATCH -> validar una incidencia --> Solo gestores
-// Si se valida, hay que rellenar los campos correspondientes
 
 // PATCH -> recuperar una incidencia eliminada --> Solo gestores
 // Habría que modificar los campos correspondientes y marcarla como no eliminada para que vuelva a aparecer

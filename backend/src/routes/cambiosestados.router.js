@@ -64,5 +64,7 @@ router.get('/incidencia/:idIncidencia', auth, usuarioNoBloqueado, async (req, re
     }
 });
 
+// POST -> 
+
 // 4. Exportar router
 module.exports = router;

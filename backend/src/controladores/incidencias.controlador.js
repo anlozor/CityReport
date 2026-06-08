@@ -3,6 +3,7 @@
 const pool = require('../bd/bd');
 const {guardarImagenes} = require('../helpers/imagenes.helper');
 const {pulirYNormalizarTexto, contienePalabrasOfensivas} = require('../helpers/texto.helper');
+const {esCambioEstadoValido, obtenerCamposCambioEstado} = require('../helpers/editarIncidencia.helper');
 
 // 2. Funciones
 
@@ -306,12 +307,16 @@ const patchEditarIncidencia = async (req, res) => {
             return res.status(400).send('Debes modificar al menos un campo');
         }
         // Permitimos solo una serie de campos a modificar, por ejemplo, para que no puedan cambiar la fecha de creación o el id del usuario autor
-        const camposPermitidos = ['titulo', 'descripcion', 'categoria'];
+        const camposPermitidos = ['titulo', 'descripcion', 'categoria', 'estado'];
         for (const campo of Object.keys(datos)) { // Aquí igual tenemos que pasarlo a array para poder comprobar si el campo que hemos recibido se puede modificar
             if (!camposPermitidos.includes(campo)) {
-                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Fecha de actualización y Categoría');
+                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Fecha de actualización, Categoría y Estado');
             }
             // Comprobamos longitudes y palabras ofensivas de los campos recibidos
+            // Si es estado, tenemos varias comprobaciones:
+            // - Si es validada, tenemos que comprobar que no está ya validada y poner qué gestor la validó. Además solo puede pasar a validada si está en nueva
+            // - Si es en proceso, solo puede pasar a ese estado si está en validada.
+            // - Si es resuelta, solo puede pasar a ese estado si está en proceso
             if (campo === 'titulo') {
                 const tituloNormalizado = pulirYNormalizarTexto(datos[campo]);
                 if (contienePalabrasOfensivas(tituloNormalizado)) {
@@ -329,6 +334,28 @@ const patchEditarIncidencia = async (req, res) => {
                 if (datos[campo].length > 250) {
                     return res.status(400).send('El límite de la descripción son 250 caracteres');
                 }
+            }
+            if (campo === 'estado') {
+                const estadoActual = existe.rows[0].estado_nombre;
+                const estadoNuevo = datos[campo];
+                if (!esCambioEstadoValido(estadoActual, estadoNuevo)) {
+                    return res.status(400).send('Cambio de estado no permitido');
+                }
+                set.push(`estado_nombre = $${values.length + 1}`);
+                values.push(estadoNuevo);
+                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.identificador_gestor, datos);
+                for (const campo of camposCambioEstado) {
+                    // En este caso lo comprobamos al revés, ya que tenemos más de un campo (para no ser redundantes) que iría con CURRENT_DATE, y así es más rápido
+                    if (camposCambioEstado[campo] === 'CURRENT_DATE') {
+                        set.push(`$${campo} = CURRENT_DATE}`);;
+                    } else {
+                        set.push(`$${campo} = $${values.length + 1}`);
+                        values.push(camposCambioEstado[campo]);
+                    }
+                }
+                // Tenemos que hacer también el historial del cambio de estado
+                await pool.query(`INSERT INTO cambio_estado (fecha_cambio, incidencia_id, usuario_id, estado_nombre) 
+                    VALUES (CURRENT_DATE, $1, $2, $3)`, [idIncidencia, req.usuario.id_usuario, estadoNuevo]);
             }
 
         }
@@ -367,6 +394,8 @@ const patchEditarIncidencia = async (req, res) => {
         
     }
 };
+
+// 
 
 // 3. Exportar
 module.exports = {
