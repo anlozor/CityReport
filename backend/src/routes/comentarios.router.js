@@ -4,6 +4,7 @@ const pool = require('../bd/bd');
 const auth = require('../middlewares/auth.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
+const {pulirYNormalizarTexto, contienePalabrasOfensivas} = require('../helpers/texto.helper');
 
 // 2. Router
 const router = express.Router();
@@ -66,22 +67,18 @@ router.post('/', auth, usuarioNoBloqueado, async (req, res) => {
         }
 
         // Pulimos texto para evitar espacios en blanco al principio y al final y para evitar que el texto esté compuesto solo por espacios en blanco
-        const textoPulido = texto.trim();
         // Comprobamos que el texto no está vacío después de pulirlo
-        if (textoPulido.length === 0) {
+        if (texto.trim().length === 0) {
             return res.status(400).send('El texto del comentario no puede estar vacío');
         }
         // Comprobamos que no se pasa de la longitud máxima de 250 caracteres
-        if (textoPulido.length > 250) {
+        if (texto.trim().length > 250) {
             return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
         }
         // Comprobamos que el texto no contiene palabras ofensivas
-        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
-        const textoNormalizado = textoPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
-        for (const palabra of textoNormalizado.split(' ')) {
-            if (palabrasOfensivas.includes(palabra)) {
-                return res.status(400).send('El texto del comentario contiene palabras ofensivas');
-            }
+        const textoNormalizado = pulirYNormalizarTexto(texto);
+        if (contienePalabrasOfensivas(textoNormalizado)) {
+            return res.status(400).send('El texto contiene palabras ofensivas');
         }
 
         // Obtenemos también el usuario_id del token
@@ -173,20 +170,17 @@ router.patch('/:id/editar', auth, usuarioNoBloqueado, async (req, res) => {
         if (!texto) {
             return res.status(400).send('Falta el texto del comentario');
         }
-        const textoPulido = texto.trim();
-        if (textoPulido.length === 0) {
+        if (texto.trim().length === 0) {
             return res.status(400).send('El texto del comentario no puede estar vacío');
         }
-        if (textoPulido.length > 250) {
+        if (texto.trim().length > 250) {
             return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
         }
-        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
-        const textoNormalizado = textoPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
-        for (const palabra of textoNormalizado.split(' ')) {
-            if (palabrasOfensivas.includes(palabra)) {
-                return res.status(400).send('El texto del comentario contiene palabras ofensivas');
-            }
+        const textoNormalizado = pulirYNormalizarTexto(texto);
+        if (contienePalabrasOfensivas(textoNormalizado)) {
+            return res.status(400).send('El texto del comentario contiene palabras ofensivas');
         }
+
         // Actualizamos el texto del comentario en la BD y rellenamos fecha_edicion y editado_por
         const comentarioEditado = await pool.query(`UPDATE comentario SET texto = $1 WHERE id_comentario = $2 RETURNING *`, [textoPulido, id]);
         res.status(200).json(comentarioEditado.rows[0]);

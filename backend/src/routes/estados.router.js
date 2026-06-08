@@ -9,8 +9,8 @@ const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const router = express.Router();
 
 // 3. Rutas
-// GET -> obtener todos los estados de las incidencias --> cualquier usuario para crear una incidencia
-router.get('/', auth, usuarioNoBloqueado, async (req, res) => {
+// GET -> obtener todos los estados de las incidencias --> los gestores para cambiar le estado de una incidencia
+router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
         // Primero obtenemos los estados
         const result = await pool.query(`SELECT * FROM estado_incidencia`);

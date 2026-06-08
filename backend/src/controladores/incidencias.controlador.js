@@ -2,6 +2,7 @@
 // 1. Importar
 const pool = require('../bd/bd');
 const {guardarImagenes} = require('../helpers/imagenes.helper');
+const {pulirYNormalizarTexto, contienePalabrasOfensivas} = require('../helpers/texto.helper');
 
 // 2. Funciones
 
@@ -213,20 +214,13 @@ const postNuevaIncidencia = async (req, res) => {
         }
 
         // Comprobamos que el titulo y la descripción no contienen palabras ofensivas
-        const tituloPulido = titulo.trim();
-        const descripcionPulida = descripcion.trim();
-        const palabrasOfensivas = ['idiota', 'tonto', 'estupido', 'imbecil', 'gilipollas', 'pendejo', 'cabron', 'puta', 'maricon', 'zorra'];
-        const tituloNormalizado = tituloPulido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
-        const descripcionNormalizada = descripcionPulida.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\w\s]/g, '');
-        for (const palabra of tituloNormalizado.split(' ')) {
-            if (palabrasOfensivas.includes(palabra)) {
-                return res.status(400).send('El título contiene palabras ofensivas');
-            }
+        const tituloNormalizado = pulirYNormalizarTexto(titulo);
+        const descripcionNormalizada = pulirYNormalizarTexto(descripcion);
+        if (contienePalabrasOfensivas(tituloNormalizado)) {
+            return res.status(400).send('El título contiene palabras ofensivas');
         }
-        for (const palabra of descripcionNormalizada.split(' ')) {
-            if (palabrasOfensivas.includes(palabra)) {
-                return res.status(400).send('La descripción contiene palabras ofensivas');
-            }
+        if (contienePalabrasOfensivas(descripcionNormalizada)) {
+            return res.status(400).send('La descripción contiene palabras ofensivas');
         }
 
         // Las coordenadas deben estar en formato válido y estar dentro del rango de coordenadas
@@ -291,11 +285,95 @@ const postNuevaIncidencia = async (req, res) => {
     }
 };
 
+// patchEditarIncidencia: función para que un gestor edite una incidencia
+// Para esta función contamos con que el frontend envíe solo los campos que se hayan modificado
+const patchEditarIncidencia = async (req, res) => {
+    try {
+        // Leemos el id de la incidencia
+        const idIncidencia = req.params.id;
+        // Comprobamos que existe
+        const existe = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [idIncidencia]);
+        if (existe.rows.length === 0) {
+            return res.status(404).send('La incidencia no existe');
+        }
+        // Comprobamos que no está eliminada
+        if (existe.rows[0].esta_eliminada) {
+            return res.status(400).send('La incidencia está eliminada');
+        }
+        // Leemos del body los campos
+        const datos = req.body; // Como esto es un objeto, necesitamos pasarlo a array para poder comprobar su longitud y ver si está vacío
+        if (Object.keys(datos).length === 0) {
+            return res.status(400).send('Debes modificar al menos un campo');
+        }
+        // Permitimos solo una serie de campos a modificar, por ejemplo, para que no puedan cambiar la fecha de creación o el id del usuario autor
+        const camposPermitidos = ['titulo', 'descripcion', 'categoria'];
+        for (const campo of Object.keys(datos)) { // Aquí igual tenemos que pasarlo a array para poder comprobar si el campo que hemos recibido se puede modificar
+            if (!camposPermitidos.includes(campo)) {
+                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Fecha de actualización y Categoría');
+            }
+            // Comprobamos longitudes y palabras ofensivas de los campos recibidos
+            if (campo === 'titulo') {
+                const tituloNormalizado = pulirYNormalizarTexto(datos[campo]);
+                if (contienePalabrasOfensivas(tituloNormalizado)) {
+                    return res.status(400).send('El título contiene palabras ofensivas');
+                }
+                if (datos[campo].length > 100) {
+                    return res.status(400).send('El límite del título son 100 caracteres');
+                }
+            }
+            if (campo === 'descripcion') {
+                const descripcionNormalizada = pulirYNormalizarTexto(datos[campo]);
+                if (contienePalabrasOfensivas(descripcionNormalizada)) {
+                    return res.status(400).send('La descirpción contiene palabras ofensivas');
+                }
+                if (datos[campo].length > 250) {
+                    return res.status(400).send('El límite de la descripción son 250 caracteres');
+                }
+            }
+
+        }
+        // Montamos y realizamos la query UPDATE una vez hechas todas las comprobaciones
+        const update = `UPDATE incidencia`;
+        let set = []
+        let values = [];
+        let where = [];
+        for (const campo of Object.keys(datos)) {
+            if (campo === 'categoria') {
+                set.push(`categoria_nombre = $${values.length + 1}`);
+            } else {
+                set.push(`${campo} = $${values.length + 1}`);
+            }
+            values.push(datos[campo]);    
+        }
+
+        set.push(`fecha_actualizacion = CURRENT_DATE`);
+        where.push(`id_incidencia = $${values.length + 1}`);
+        values.push(idIncidencia);
+
+        let query = update;
+        query += ' SET ' + set.join(', ');
+        query += ' WHERE ' + where.join(' AND ');
+        query += ' RETURNING *';
+
+        const result = await pool.query(query, values);
+        res.status(200).json({
+            mensaje: 'Incidencia actualizada correctamente',
+            result: result.rows
+        })
+        
+    } catch (error) {
+        console.error('Error al editar la incidencia:', error);
+        res.status(500).send('Error al editar la incidencia');
+        
+    }
+};
+
 // 3. Exportar
 module.exports = {
     // Funciones a exportar
     getIncidencias,
     getIncidenciasUsuario,
     getIncidenciaId,
-    postNuevaIncidencia
+    postNuevaIncidencia,
+    patchEditarIncidencia
 };
