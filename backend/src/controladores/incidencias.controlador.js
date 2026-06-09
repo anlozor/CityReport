@@ -307,10 +307,10 @@ const patchEditarIncidencia = async (req, res) => {
             return res.status(400).send('Debes modificar al menos un campo');
         }
         // Permitimos solo una serie de campos a modificar, por ejemplo, para que no puedan cambiar la fecha de creación o el id del usuario autor
-        const camposPermitidos = ['titulo', 'descripcion', 'categoria', 'estado'];
+        const camposPermitidos = ['titulo', 'descripcion', 'categoria', 'estado', 'descripcion_resolucion'];
         for (const campo of Object.keys(datos)) { // Aquí igual tenemos que pasarlo a array para poder comprobar si el campo que hemos recibido se puede modificar
             if (!camposPermitidos.includes(campo)) {
-                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Fecha de actualización, Categoría y Estado');
+                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Categoría, Estado y Descripción de la resolución');
             }
             // Comprobamos longitudes y palabras ofensivas de los campos recibidos
             // Si es estado, tenemos varias comprobaciones:
@@ -335,27 +335,14 @@ const patchEditarIncidencia = async (req, res) => {
                     return res.status(400).send('El límite de la descripción son 250 caracteres');
                 }
             }
-            if (campo === 'estado') {
-                const estadoActual = existe.rows[0].estado_nombre;
-                const estadoNuevo = datos[campo];
-                if (!esCambioEstadoValido(estadoActual, estadoNuevo)) {
-                    return res.status(400).send('Cambio de estado no permitido');
+            if (campo === 'descripcion_resolucion') {
+                const descripResolNormalizada = pulirYNormalizarTexto(datos[campo]);
+                if (contienePalabrasOfensivas(descripResolNormalizada)) {
+                    return res.status(400).send('La descripción de la resolución contiene palabras ofensivas');
                 }
-                set.push(`estado_nombre = $${values.length + 1}`);
-                values.push(estadoNuevo);
-                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.identificador_gestor, datos);
-                for (const campo of camposCambioEstado) {
-                    // En este caso lo comprobamos al revés, ya que tenemos más de un campo (para no ser redundantes) que iría con CURRENT_DATE, y así es más rápido
-                    if (camposCambioEstado[campo] === 'CURRENT_DATE') {
-                        set.push(`$${campo} = CURRENT_DATE}`);;
-                    } else {
-                        set.push(`$${campo} = $${values.length + 1}`);
-                        values.push(camposCambioEstado[campo]);
-                    }
+                if (datos[campo].length > 250) {
+                    return res.status(400).send('El límite de la descripción de la resolución son 250 caracteres');
                 }
-                // Tenemos que hacer también el historial del cambio de estado
-                await pool.query(`INSERT INTO cambio_estado (fecha_cambio, incidencia_id, usuario_id, estado_nombre) 
-                    VALUES (CURRENT_DATE, $1, $2, $3)`, [idIncidencia, req.usuario.id_usuario, estadoNuevo]);
             }
 
         }
@@ -364,13 +351,33 @@ const patchEditarIncidencia = async (req, res) => {
         let set = []
         let values = [];
         let where = [];
+        let estadoNuevo;
         for (const campo of Object.keys(datos)) {
             if (campo === 'categoria') {
                 set.push(`categoria_nombre = $${values.length + 1}`);
+                values.push(datos[campo]);
+            } else if (campo === 'estado') {
+                const estadoActual = existe.rows[0].estado_nombre;
+                estadoNuevo = datos[campo];
+                if (!esCambioEstadoValido(estadoActual, estadoNuevo)) {
+                    return res.status(400).send('Cambio de estado no permitido');
+                }
+                set.push(`estado_nombre = $${values.length + 1}`);
+                values.push(estadoNuevo);
+                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.identificador_gestor, datos);
+                for (const campo of Object.keys(camposCambioEstado)) {
+                    // En este caso lo comprobamos al revés, ya que tenemos más de un campo (para no ser redundantes) que iría con CURRENT_DATE, y así es más rápido
+                    if (camposCambioEstado[campo] === 'CURRENT_DATE') {
+                        set.push(`${campo} = CURRENT_DATE`);;
+                    } else {
+                        set.push(`${campo} = $${values.length + 1}`);
+                        values.push(camposCambioEstado[campo]);
+                    }
+                }
             } else {
                 set.push(`${campo} = $${values.length + 1}`);
-            }
-            values.push(datos[campo]);    
+                values.push(datos[campo]);
+            }    
         }
 
         set.push(`fecha_actualizacion = CURRENT_DATE`);
@@ -382,10 +389,40 @@ const patchEditarIncidencia = async (req, res) => {
         query += ' WHERE ' + where.join(' AND ');
         query += ' RETURNING *';
 
-        const result = await pool.query(query, values);
+        // En este caso debemos usar una transacción en sql, de manera que no habrá problemas si, por ejemplo, update funciona pero insert falla
+        // De esta forma, si algo falla, no se ejecuta nada y devuelve error
+        // Primero obtenemos un cliente del pool de la bd
+        const cliente = await pool.connect();
+        let resultUpdate;
+        let resultInsert;
+        try {
+            // 1. Iniciamos la transacción con BEGIN
+            await cliente.query('BEGIN');
+            // 2. Ejecutamos las consultas
+            resultUpdate = await cliente.query(query, values);
+            // Hacemos el historial del cambio de estado si se modifica el estado
+            if (estadoNuevo) {
+                resultInsert = await cliente.query(`INSERT INTO cambio_estado (fecha_cambio, incidencia_id, usuario_id, estado_nombre) 
+                    VALUES (CURRENT_DATE, $1, $2, $3)`, [idIncidencia, req.usuario.id_usuario, estadoNuevo]);
+            }
+            // 3. Cerramos la transacción si todo sale bien
+            await cliente.query('COMMIT');
+            
+        } catch (error) {
+            // 4. Revertimos los cambios si ocurre algún error
+            await cliente.query('ROLLBACK');
+            throw error;
+            
+        } finally {
+            // 5. Liberamos el cliente
+            cliente.release();
+        }
+
         res.status(200).json({
             mensaje: 'Incidencia actualizada correctamente',
-            result: result.rows
+            resultadoUpdate: resultUpdate.rows,
+            // Si no se ha modificado el estado aparecerá null
+            resultadoInsert: resultInsert ? resultInsert.rows : null
         })
         
     } catch (error) {
@@ -395,7 +432,20 @@ const patchEditarIncidencia = async (req, res) => {
     }
 };
 
-// 
+// patchEliminarIncidencia: función para que un gestor elimine una incidencia (borrado lógico)
+const patchEliminarIncidencia = async (req, res) => {
+    try {
+        // Leemos el id de la incidencia que queremos eliminar
+        // Comprobamos que existe
+        // Comprobamos que no está ya eliminada
+        // Rellenamos los cambios correspondientes y la marcamos como eliminada
+        
+    } catch (error) {
+        console.error('Error al eliminar la incidencia:', error);
+        res.status(500).send('Error al eliminar la incidencia');
+        
+    }
+};
 
 // 3. Exportar
 module.exports = {
@@ -404,5 +454,6 @@ module.exports = {
     getIncidenciasUsuario,
     getIncidenciaId,
     postNuevaIncidencia,
-    patchEditarIncidencia
+    patchEditarIncidencia,
+    patchEliminarIncidencia
 };

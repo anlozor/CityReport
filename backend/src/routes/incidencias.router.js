@@ -5,7 +5,7 @@ const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const {getIncidencias, getIncidenciasUsuario, getIncidenciaId, 
-    postNuevaIncidencia, patchEditarIncidencia, patchValidarIncidencia} = require('../controladores/incidencias.controlador');
+    postNuevaIncidencia, patchEditarIncidencia, patchEliminarIncidencia} = require('../controladores/incidencias.controlador');
 const upload = require('../middlewares/uploads.middleware');
 
 // 2. Router
@@ -34,6 +34,7 @@ router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIn
 
 // PATCH -> recuperar una incidencia eliminada --> Solo gestores
 // Habría que modificar los campos correspondientes y marcarla como no eliminada para que vuelva a aparecer
+//router.patch('/:id/eliminar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEliminarIncidencia);
 
 // DELETE -> eliminar una incidencia --> Solo gestores
 
