@@ -5,7 +5,8 @@ const auth = require('../middlewares/auth.middleware');
 const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const {autorizarRol} = require('../middlewares/roles.middleware');
 const {getIncidencias, getIncidenciasUsuario, getIncidenciaId, 
-    postNuevaIncidencia, patchEditarIncidencia, patchEliminarIncidencia} = require('../controladores/incidencias.controlador');
+    postNuevaIncidencia, patchEditarIncidencia, patchEliminarIncidencia,
+    patchRecuperarIncidencia, getIncidenciasEliminadas} = require('../controladores/incidencias.controlador');
 const upload = require('../middlewares/uploads.middleware');
 
 // 2. Router
@@ -23,6 +24,9 @@ router.get('/', auth, usuarioNoBloqueado, getIncidencias);
 router.get('/usuario/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), getIncidenciasUsuario);
 router.get('/:id', auth, usuarioNoBloqueado, getIncidenciaId);
 
+// GET -> obtener listado de incidencias eliminadas --> Solo gestores
+router.get('/eliminadas', auth, usuarioNoBloqueado, autorizarRol(1, 2), getIncidenciasEliminadas)
+
 // POST -> añadir una incidencia nueva --> Todos los usuarios pueden crear una incidencia
 router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), postNuevaIncidencia);
 
@@ -34,9 +38,10 @@ router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIn
 
 // PATCH -> recuperar una incidencia eliminada --> Solo gestores
 // Habría que modificar los campos correspondientes y marcarla como no eliminada para que vuelva a aparecer
-router.patch('/:id/eliminar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEliminarIncidencia);
+router.patch('/:id/recuperar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchRecuperarIncidencia);
 
-// DELETE -> eliminar una incidencia --> Solo gestores
+// PATCH -> eliminar una incidencia --> Solo gestores
+router.patch('/:id/eliminar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEliminarIncidencia);
 
 // 4. Exportar router
 module.exports = router;

@@ -131,6 +131,21 @@ const getIncidencias = async (req, res) => {
     }
 };
 
+// getIncidenciasEliminadas: función para que los gestores puedan ver las incidencias eliminadas desde la más reciente a la más antigua (en fecha de eliminación)
+const getIncidenciasEliminadas = async (req, res) => {
+    try {
+        // Como solo va a ser ordenado por fecha de eliminación de la más reciente a la más antigua y no va a haber filtros, hacemos directamente la consulta
+        const result = await pool.query(`SELECT * FROM incidencia WHERE esta_eliminada = true ORDER BY fecha_eliminacion DESC`);
+        if (result.rows.length === 0) {
+            return res.status(404).send('No se han encontrado incidencias eliminadas');
+        }
+        
+    } catch (error) {
+        console.error('Error al cargar las incidencias eliminadas:', error);
+        res.status(500).send('Error al cargar las incidencias eliminadas');
+    }
+};
+
 // getIncidenciasUsuario: función para obtener las incidencias de un usuario --> solo gestores
 const getIncidenciasUsuario = async (req, res) => {
     try {
@@ -458,13 +473,42 @@ const patchEliminarIncidencia = async (req, res) => {
     }
 };
 
+// patchRecuperarIncidencia: función para que un gestor pueda recuperar una incidencia eliminada
+const patchRecuperarIncidencia = async (req, res) => {
+    try {
+        // Leemos el id de la incidencia a recuperar
+        const id = req.params.id;
+        // Comprobamos que existe la incidencia
+        const existe = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [id]);
+        if (existe.rows.length === 0) {
+            return res.status(404).send('La incidencia no existe');
+        }
+        // Comprobamso que está eliminada
+        if (!existe.rows[0].esta_eliminada) {
+            return res.status(400).send('La incidencia no está eliminada');
+        }
+        // Reestablecemos los campos correspondientes con UPDATE y la marcamos como no eliminada
+        const result = await pool.query(`UPDATE incidencia SET esta_eliminada = false, fecha_eliminacion = null, eliminado_por = null 
+            WHERE id_incidencia = $1`, [id]);
+        
+        res.status(200).send('Se ha recuperado la incidencia correctamente');
+
+    } catch (error) {
+        console.error('Error al recuperar la incidencia:', error);
+        res.status(500).send('Error al recuperar la incidencia');
+        
+    }
+};
+
 // 3. Exportar
 module.exports = {
     // Funciones a exportar
     getIncidencias,
     getIncidenciasUsuario,
     getIncidenciaId,
+    getIncidenciasEliminadas,
     postNuevaIncidencia,
     patchEditarIncidencia,
-    patchEliminarIncidencia
+    patchEliminarIncidencia,
+    patchRecuperarIncidencia
 };
