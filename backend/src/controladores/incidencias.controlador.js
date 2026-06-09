@@ -364,7 +364,7 @@ const patchEditarIncidencia = async (req, res) => {
                 }
                 set.push(`estado_nombre = $${values.length + 1}`);
                 values.push(estadoNuevo);
-                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.identificador_gestor, datos);
+                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.idGestor, datos);
                 for (const campo of Object.keys(camposCambioEstado)) {
                     // En este caso lo comprobamos al revés, ya que tenemos más de un campo (para no ser redundantes) que iría con CURRENT_DATE, y así es más rápido
                     if (camposCambioEstado[campo] === 'CURRENT_DATE') {
@@ -436,9 +436,20 @@ const patchEditarIncidencia = async (req, res) => {
 const patchEliminarIncidencia = async (req, res) => {
     try {
         // Leemos el id de la incidencia que queremos eliminar
+        const id = req.params.id;
         // Comprobamos que existe
+        const existe = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [id]);
+        if (existe.rows.length === 0) {
+            return res.status(404).send('La incidencia no existe');
+        }
         // Comprobamos que no está ya eliminada
+        if (existe.rows[0].esta_eliminada) {
+            return res.status(400).send('La incidencia ya está eliminada');
+        }
         // Rellenamos los cambios correspondientes y la marcamos como eliminada
+        const result = await pool.query(`UPDATE incidencia SET esta_eliminada = true, fecha_eliminacion = CURRENT_DATE, eliminado_por = $1 
+            WHERE id_incidencia = $2`, [req.usuario.idGestor, id]);
+        res.status(200).send('Incidencia eliminada correctamente');
         
     } catch (error) {
         console.error('Error al eliminar la incidencia:', error);

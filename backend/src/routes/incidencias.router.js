@@ -34,7 +34,7 @@ router.patch('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEditarIn
 
 // PATCH -> recuperar una incidencia eliminada --> Solo gestores
 // Habría que modificar los campos correspondientes y marcarla como no eliminada para que vuelva a aparecer
-//router.patch('/:id/eliminar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEliminarIncidencia);
+router.patch('/:id/eliminar', auth, usuarioNoBloqueado, autorizarRol(1, 2), patchEliminarIncidencia);
 
 // DELETE -> eliminar una incidencia --> Solo gestores
 
