@@ -216,12 +216,33 @@ router.patch('/:id/rechazar', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
 
 // PATCH -> acepta una solicitud --> solo gestores
 // El estado pasa a aceptada y se rellenen el id del gestor y al fecha de la resolución
-// Esto conecta con el post /usuarios/gestores
+// Esto conecta con el post /usuarios/gestores en frontend
 router.patch('/:id/aceptar', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
    try {
+    // Leemos el id de la solicitud a rechazar
+    const id = req.params.id;
+    // Comprobamos que existe al solicitud
+    const existe = await pool.query(`SELECT * FROM solicitud_gestor WHERE id_solicitud = $1`, [id]);
+    if (existe.rows.length === 0) {
+        return res.status(404).send('No existe la solicitud');
+    }
+    // Comprobamos que no está ya rechazada o aceptada
+    if (existe.rows[0].estado === 'Rechazada') {
+        return res.status(400).send('La solicitud ya ha sido rechazada');
+    }
+    if (existe.rows[0].estado === 'Aceptada') {
+        return res.status(400).send('La solicitud ya ha sido aceptada');
+    }
+    // Marcamos estado = Aceptada y rellenamos los campos correspondientes
+    const result = await pool.query(`UPDATE solicitud_gestor SET estado = 'Aceptada', fecha_resolucion = CURRENT_DATE, 
+        gestor_id = $1 WHERE id_solicitud = $2`, [req.usuario.idGestor, id]);
+
+    res.status(200).send('Solicitud aceptada correctamente');
     
    } catch (error) {
-    
+    console.error('Error al aceptar la solicitud:', error);
+    res.status(500).send('Error al aceptar la solicitud');
+
    } 
 });
 
