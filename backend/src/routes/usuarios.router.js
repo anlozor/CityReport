@@ -8,7 +8,7 @@ const {autorizarRol} = require('../middlewares/roles.middleware');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const authActivacion = require('../middlewares/authActivacion.middleware');
-const {enviarRecuperacion} = require('../helpers/emailFunciones.helper');
+const {enviarRecuperacion, enviarCredencialesGestor} = require('../helpers/emailFunciones.helper');
 const validator = require('validator');
 
 // 2. Router
@@ -164,10 +164,11 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 SET identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
                 WHERE email = $5`, [idGestor, alias, rol_id, codigo_activacion, email]);
 
+            const enlace = 'https://localhost:3000/usuarios/activar-gestor';
+            await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
+
             res.status(200).json({
-                "mensaje": "Actualizado perfil a gestor correctamente",
-                "identificador_gestor": idGestor,
-                "codigo_activacion": codigo_activacion
+                mensaje: 'Se ha enviado un correo con las instrucciones de activación'
             });
             
         } else {
@@ -177,11 +178,12 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 (nombre, email, rol_id, fecha_registro, contraseña, identificador_gestor, alias, codigo_activacion)
                 VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7) RETURNING *`, 
                 [nombre, email, rol_id, contraseñaHashed, idGestor, alias, codigo_activacion]);
+
+            const enlace = 'https://localhost:3000/usuarios/activar-gestor';
+            await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
         
             res.status(201).json({
-                "mensaje": "Gestor creado correctamente",
-                "identificador_gestor": idGestor,
-                "codigo_activacion": codigo_activacion
+                mensaje: 'Se ha enviado un correo con las instrucciones de activación'
             });
         }
 
@@ -221,12 +223,12 @@ router.patch('/verificar-activacion', async (req, res) => {
         // Marcamos el código como usado y lo borramos
         const result = await pool.query(`UPDATE usuario SET codigo_usado = true, codigo_activacion = null 
             WHERE identificador_gestor = $1 RETURNING *`, [identificador_gestor]);
-        // Generamos un JWT temporal, por ejemplo de 10 minutos
+        // Generamos un JWT temporal, por ejemplo de 1 día
         const token = jwt.sign({
             id_usuario: result.rows[0].id_usuario,
             activacion: true
         }, process.env.JWT_SECRET,
-        {expiresIn: '10m'});
+        {expiresIn: '1d'});
 
         res.status(200).json({
             mensaje: "Código verificado correctamente",

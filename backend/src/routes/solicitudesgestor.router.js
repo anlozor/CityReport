@@ -7,6 +7,8 @@ const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const upload = require('../middlewares/uploads.middleware');
 const {pulirYNormalizarTexto, contienePalabrasOfensivas} = require('../helpers/texto.helper');
 const {guardarImagenes} = require('../helpers/imagenes.helper');
+const {enviarCredencialesGestor} = require('../helpers/emailFunciones.helper');
+const validator = require('validator');
 
 // 2. Router
 const router = express.Router();
@@ -108,6 +110,10 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(3), upload.array('imagen
         if (!imagenes || imagenes.length !== 3) {
             await cliente.query('ROLLBACK');
             return res.status(400).send('Debes adjuntar las 3 imágenes');
+        }
+        if (!validator.isEmail(email)) {
+            await cliente.query('ROLLBACK');
+            return res.status(400).send('El formato del correo no es correcto');
         }
         // Comrpobamos longitudes
         if (motivo_solicitud.length > 250) {
@@ -244,6 +250,42 @@ router.patch('/:id/aceptar', auth, usuarioNoBloqueado, autorizarRol(1, 2), async
     res.status(500).send('Error al aceptar la solicitud');
 
    } 
+});
+
+// POST -> reenviar correo con credenciales en caso de no haberlo recibido
+router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(3), async (req, res) => {
+    try {
+        // Leemos la solicitud de la que se quiere reenviar las credenciales
+        const id = req.params.id;
+        // Comprobamos que existe
+        const existe = await pool.query(`SELECT usuario.id_usuario, usuario.identificador_gestor, usuario.codigo_activacion, usuario.codigo_usado, usuario.email,
+            sg.estado, sg.usuario_id FROM usuario JOIN solicitud_gestor sg ON sg.usuario_id = usuario.id_usuario WHERE sg.id_solicitud = $1`, [id]);
+        if (existe.rows.length === 0) {
+            return res.status(404).send('No existe la solicitud');
+        }
+        // Comprobamos que pertenece al usuario
+        if (Number(existe.rows[0].usuario_id) !== Number(req.usuario.id_usuario)) {
+            return res.status(403).send('No tienes permiso para acceder a esta solicitud');
+        }
+        // Comprobamos que está aceptada
+        if (existe.rows[0].estado !== 'Aceptada') {
+            return res.status(400).send('La solicitud no ha sido aceptada');
+        }
+        // Comprobamos que el usuario no ha usado ya el código
+        if (existe.rows[0].codigo_usado) {
+            return res.status(400).send('La cuenta ya ha sido activada');
+        }
+        // Reenviamos el correo
+        const enlace = 'https://localhost:3000/solicitudes-gestor/activar-gestor';
+        await enviarCredencialesGestor(existe.rows[0].email, enlace, existe.rows[0].identificador_gestor, existe.rows[0].codigo_activacion);
+
+        res.status(200).send('Se ha enviado un nuevo correo con las credenciales');
+
+    } catch (error) {
+        console.error('Error al reenviar el correo:', error);
+        res.status(500).send('Error al reenviar el correo');
+        
+    }
 });
 
 // 4. Exportar router
