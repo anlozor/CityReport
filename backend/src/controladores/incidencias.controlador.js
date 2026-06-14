@@ -127,7 +127,8 @@ const getIncidencias = async (req, res) => {
 
     } catch (error) {
         console.error('Error al obtener las incidencias:', error);
-        res.status(500).send('Error al obtener las incidencias');
+        res.status(500).json({
+            mensaje: 'Error al obtener las incidencias'});
     }
 };
 
@@ -137,12 +138,14 @@ const getIncidenciasEliminadas = async (req, res) => {
         // Como solo va a ser ordenado por fecha de eliminación de la más reciente a la más antigua y no va a haber filtros, hacemos directamente la consulta
         const result = await pool.query(`SELECT * FROM incidencia WHERE esta_eliminada = true ORDER BY fecha_eliminacion DESC`);
         if (result.rows.length === 0) {
-            return res.status(404).send('No se han encontrado incidencias eliminadas');
+            return res.status(404).json({
+                mensaje: 'No se han encontrado incidencias eliminadas'});
         }
         
     } catch (error) {
         console.error('Error al cargar las incidencias eliminadas:', error);
-        res.status(500).send('Error al cargar las incidencias eliminadas');
+        res.status(500).json({
+            mensaje: 'Error al cargar las incidencias eliminadas'});
     }
 };
 
@@ -160,13 +163,15 @@ const getIncidenciasUsuario = async (req, res) => {
             ORDER BY incidencia.fecha_creacion DESC`, [id]);
         // Comprobamos que nos ha devuelto algo
         if (result.rows.length === 0) {
-            return res.status(404).send('No se encontraron incidencias para este usuario');
+            return res.status(404).json({
+                mensaje: 'No se encontraron incidencias para este usuario'});
         }
         res.status(200).json(result.rows);
         
     } catch (error) {
         console.error('Error al obtener las incidencias del usuario:', error);
-        res.status(500).send('Error al obtener las incidencias del usuario');
+        res.status(500).json({
+            mensaje: 'Error al obtener las incidencias del usuario'});
     }
 };
 
@@ -185,7 +190,8 @@ const getIncidenciaId = async (req, res) => {
             WHERE incidencia.id_incidencia = $1 AND incidencia.esta_eliminada = false
             GROUP BY incidencia.id_incidencia`, [id]);
         if (infoIncidencia.rows.length === 0) {
-            return res.status(404).send('Incidencia no encontrada');
+            return res.status(404).json({
+                mensaje: 'Incidencia no encontrada'});
         }
         // La de comentarios
         const comentarios = await pool.query(`SELECT comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
@@ -205,7 +211,8 @@ const getIncidenciaId = async (req, res) => {
         
     } catch (error) {
         console.error('Error al obtener la información de la incidencia:', error);
-        res.status(500).send('Error al obtener la información de la incidencia');
+        res.status(500).json({
+            mensaje: 'Error al obtener la información de la incidencia'});
         
     }
 };
@@ -218,25 +225,31 @@ const postNuevaIncidencia = async (req, res) => {
         const usuario_id = req.usuario.id_usuario;
         // Comprobamos que no falta ninguno
         if (!titulo || !direccion_texto || lon === undefined || lat === undefined || !categoria) {
-            return res.status(400).send('Faltan campos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan campos obligatorios'});
         }
         // Comprobamos longitud de texto, que la categoría existe, etc.
         if (titulo.length > 100) {
-            return res.status(400).send('El título supera el límite, no debe sobrepasar los 100 caracteres');
+            return res.status(400).json({
+                mensaje: 'El título supera el límite, no debe sobrepasar los 100 caracteres'});
         } else if (descripcion.length > 250) {
-            return res.status(400).send('La descripción supera el límite, no debe sobrepasar los 250 caracteres');
+            return res.status(400).json({
+                mensaje: 'La descripción supera el límite, no debe sobrepasar los 250 caracteres'});
         } else if (direccion_texto.length > 100) {
-            return res.status(400).send('La dirección supera el límite, no debe sobrepasar los 100 caracteres');
+            return res.status(400).json({
+                mensaje: 'La dirección supera el límite, no debe sobrepasar los 100 caracteres'});
         }
 
         // Comprobamos que el titulo y la descripción no contienen palabras ofensivas
         const tituloNormalizado = pulirYNormalizarTexto(titulo);
         const descripcionNormalizada = pulirYNormalizarTexto(descripcion);
         if (contienePalabrasOfensivas(tituloNormalizado)) {
-            return res.status(400).send('El título contiene palabras ofensivas');
+            return res.status(400).json({
+                mensaje: 'El título contiene palabras ofensivas'});
         }
         if (contienePalabrasOfensivas(descripcionNormalizada)) {
-            return res.status(400).send('La descripción contiene palabras ofensivas');
+            return res.status(400).json({
+                mensaje: 'La descripción contiene palabras ofensivas'});
         }
 
         // Las coordenadas deben estar en formato válido y estar dentro del rango de coordenadas
@@ -246,9 +259,11 @@ const postNuevaIncidencia = async (req, res) => {
         const lonValida = longitud >= -180 && longitud <= 180;
         const coordsValidas = latValida && lonValida;
         if (isNaN(longitud) || isNaN(latitud)) {
-            return res.status(400).send('El formato de las coordenadas no es válido');
+            return res.status(400).json({
+                mensaje: 'El formato de las coordenadas no es válido'});
         } else if (!coordsValidas) {
-            return res.status(400).send('Las coordenadas no son válidas');
+            return res.status(400).json({
+                mensaje: 'Las coordenadas no son válidas'});
         }
 
         // Comprobamos que la categoría existe
@@ -256,7 +271,8 @@ const postNuevaIncidencia = async (req, res) => {
         // No haría falta comprobarlo teniendo en cuenta lo que acabo de poner, pero por si acaso no está de más
         const categValida = await pool.query(`SELECT 1 FROM categoria WHERE nombre = $1`, [categoria]);
         if (categValida.rows.length === 0) {
-            return res.status(404).send('La categoría no existe');
+            return res.status(404).json({
+                mensaje: 'La categoría no existe'});
         }
 
         // Definimos los valores iniciales que no vienen dados por el usuario como estado, prioridad, etc.
@@ -296,7 +312,8 @@ const postNuevaIncidencia = async (req, res) => {
         
     } catch (error) {
         console.error('Error al crear nueva incidencia:', error);
-        res.status(500).send('Error al crear nueva incidencia');
+        res.status(500).json({
+            mensaje: 'Error al crear nueva incidencia'});
         
     }
 };
@@ -319,25 +336,29 @@ const patchEditarIncidencia = async (req, res) => {
         const existe = await cliente.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [idIncidencia]);
         if (existe.rows.length === 0) {
             await cliente.query('ROLLBACK');
-            return res.status(404).send('La incidencia no existe');
+            return res.status(404).json({
+                mensaje: 'La incidencia no existe'});
         }
         // Comprobamos que no está eliminada
         if (existe.rows[0].esta_eliminada) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('La incidencia está eliminada');
+            return res.status(400).json({
+                mensaje: 'La incidencia está eliminada'});
         }
         // Leemos del body los campos
         const datos = req.body; // Como esto es un objeto, necesitamos pasarlo a array para poder comprobar su longitud y ver si está vacío
         if (Object.keys(datos).length === 0) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('Debes modificar al menos un campo');
+            return res.status(400).json({
+                mensaje: 'Debes modificar al menos un campo'});
         }
         // Permitimos solo una serie de campos a modificar, por ejemplo, para que no puedan cambiar la fecha de creación o el id del usuario autor
         const camposPermitidos = ['titulo', 'descripcion', 'categoria', 'estado', 'descripcion_resolucion'];
         for (const campo of Object.keys(datos)) { // Aquí igual tenemos que pasarlo a array para poder comprobar si el campo que hemos recibido se puede modificar
             if (!camposPermitidos.includes(campo)) {
                 await cliente.query('ROLLBACK');
-                return res.status(400).send('Solo puedes modificar los campos Título, Descripción, Categoría, Estado y Descripción de la resolución');
+                return res.status(400).json({
+                    mensaje: 'Solo puedes modificar los campos Título, Descripción, Categoría, Estado y Descripción de la resolución'});
             }
             // Comprobamos longitudes y palabras ofensivas de los campos recibidos
             // Si es estado, tenemos varias comprobaciones:
@@ -348,33 +369,39 @@ const patchEditarIncidencia = async (req, res) => {
                 const tituloNormalizado = pulirYNormalizarTexto(datos[campo]);
                 if (contienePalabrasOfensivas(tituloNormalizado)) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('El título contiene palabras ofensivas');
+                    return res.status(400).json({
+                        mensaje: 'El título contiene palabras ofensivas'});
                 }
                 if (datos[campo].length > 100) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('El límite del título son 100 caracteres');
+                    return res.status(400).json({
+                        mensaje: 'El límite del título son 100 caracteres'});
                 }
             }
             if (campo === 'descripcion') {
                 const descripcionNormalizada = pulirYNormalizarTexto(datos[campo]);
                 if (contienePalabrasOfensivas(descripcionNormalizada)) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('La descripción contiene palabras ofensivas');
+                    return res.status(400).json({
+                        mensaje: 'La descripción contiene palabras ofensivas'});
                 }
                 if (datos[campo].length > 250) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('El límite de la descripción son 250 caracteres');
+                    return res.status(400).json({
+                        mensaje: 'El límite de la descripción son 250 caracteres'});
                 }
             }
             if (campo === 'descripcion_resolucion') {
                 const descripResolNormalizada = pulirYNormalizarTexto(datos[campo]);
                 if (contienePalabrasOfensivas(descripResolNormalizada)) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('La descripción de la resolución contiene palabras ofensivas');
+                    return res.status(400).json({
+                        mensaje: 'La descripción de la resolución contiene palabras ofensivas'});
                 }
                 if (datos[campo].length > 250) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('El límite de la descripción de la resolución son 250 caracteres');
+                    return res.status(400).json({
+                        mensaje: 'El límite de la descripción de la resolución son 250 caracteres'});
                 }
             }
 
@@ -394,7 +421,8 @@ const patchEditarIncidencia = async (req, res) => {
                 estadoNuevo = datos[campo];
                 if (!esCambioEstadoValido(estadoActual, estadoNuevo)) {
                     await cliente.query('ROLLBACK');
-                    return res.status(400).send('Cambio de estado no permitido');
+                    return res.status(400).json({
+                        mensaje: 'Cambio de estado no permitido'});
                 }
                 set.push(`estado_nombre = $${values.length + 1}`);
                 values.push(estadoNuevo);
@@ -448,7 +476,8 @@ const patchEditarIncidencia = async (req, res) => {
             // 4. Revertimos los cambios si ocurre algún error
             await cliente.query('ROLLBACK');
             console.error('Error al editar la incidencia:', error);
-            res.status(500).send('Error al editar la incidencia');
+            res.status(500).json({
+                mensaje: 'Error al editar la incidencia'});
             
         } finally {
             // 5. Liberamos el cliente
@@ -464,20 +493,24 @@ const patchEliminarIncidencia = async (req, res) => {
         // Comprobamos que existe
         const existe = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [id]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('La incidencia no existe');
+            return res.status(404).json({
+                mensaje: 'La incidencia no existe'});
         }
         // Comprobamos que no está ya eliminada
         if (existe.rows[0].esta_eliminada) {
-            return res.status(400).send('La incidencia ya está eliminada');
+            return res.status(400).json({
+                mensaje: 'La incidencia ya está eliminada'});
         }
         // Rellenamos los cambios correspondientes y la marcamos como eliminada
         const result = await pool.query(`UPDATE incidencia SET esta_eliminada = true, fecha_eliminacion = CURRENT_DATE, eliminado_por = $1 
             WHERE id_incidencia = $2`, [req.usuario.idGestor, id]);
-        res.status(200).send('Incidencia eliminada correctamente');
+        res.status(200).json({
+            mensaje: 'Incidencia eliminada correctamente'});
         
     } catch (error) {
         console.error('Error al eliminar la incidencia:', error);
-        res.status(500).send('Error al eliminar la incidencia');
+        res.status(500).json({
+            mensaje: 'Error al eliminar la incidencia'});
         
     }
 };
@@ -490,21 +523,25 @@ const patchRecuperarIncidencia = async (req, res) => {
         // Comprobamos que existe la incidencia
         const existe = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [id]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('La incidencia no existe');
+            return res.status(404).json({
+                mensaje: 'La incidencia no existe'});
         }
         // Comprobamso que está eliminada
         if (!existe.rows[0].esta_eliminada) {
-            return res.status(400).send('La incidencia no está eliminada');
+            return res.status(400).json({
+                mensaje: 'La incidencia no está eliminada'});
         }
         // Reestablecemos los campos correspondientes con UPDATE y la marcamos como no eliminada
         const result = await pool.query(`UPDATE incidencia SET esta_eliminada = false, fecha_eliminacion = null, eliminado_por = null 
             WHERE id_incidencia = $1`, [id]);
         
-        res.status(200).send('Se ha recuperado la incidencia correctamente');
+        res.status(200).json({
+            mensaje: 'Se ha recuperado la incidencia correctamente'});
 
     } catch (error) {
         console.error('Error al recuperar la incidencia:', error);
-        res.status(500).send('Error al recuperar la incidencia');
+        res.status(500).json({
+            mensaje: 'Error al recuperar la incidencia'});
         
     }
 };

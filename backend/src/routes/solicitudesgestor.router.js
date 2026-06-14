@@ -21,7 +21,8 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         const result = await pool.query(`SELECT * FROM solicitud_gestor WHERE estado = 'Enviada' ORDER BY fecha_solicitud DESC`);
         // Comprobamos que nos devuelve algo
         if (result.rows.length === 0) {
-            return res.status(404).send('No se han encontrado solicitudes pendientes');
+            return res.status(404).json({
+                mensaje: 'No se han encontrado solicitudes pendientes'});
         }
         // Petición HTTP y resultado
         res.status(200).json({
@@ -31,7 +32,8 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         
     } catch (error) {
         console.error('Error al obtener las solicitudes:', error);
-        res.status(500).send('Error al obtener las solicitudes');
+        res.status(500).json({
+            mensaje: 'Error al obtener las solicitudes'});
         
     }
 });
@@ -44,14 +46,16 @@ router.get('/:id', auth, usuarioNoBloqueado, autorizarRol (1, 2), async (req, re
         // Comprobamos que existe la solicitud
         const existe = await pool.query(`SELECT * FROM solicitud_gestor WHERE id_solicitud = $1`, [id]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('La solicitud no existe');
+            return res.status(404).json({
+                mensaje: 'La solicitud no existe'});
         }
         // Obtenemos los datos de la consulta junto con las imágenes
         const result = await pool.query(`SELECT sg.fecha_solicitud, sg.estado, sg.email, sg.nombre, sg.dni, sg.motivo_solicitud, sg.direccion, 
             sg.cp, sg.provincia, sg.localidad, imagen.id_imagen, imagen.ruta FROM solicitud_gestor sg
             LEFT JOIN imagen ON imagen.solicitud_id = sg.id_solicitud AND imagen.esta_eliminada = false WHERE sg.id_solicitud = $1`, [id]);
         if (result.rows.length === 0) {
-            return res.status(404).send('No se han encontrado datos de la solicitud');
+            return res.status(404).json({
+                mensaje: 'No se han encontrado datos de la solicitud'});
         }
 
         // Como en cada solicitud son obligatorias las 3 imagenes, para no perderlas tenemos que añadirlas al resultado por la forma en la que lo devuelve la bd
@@ -86,7 +90,8 @@ router.get('/:id', auth, usuarioNoBloqueado, autorizarRol (1, 2), async (req, re
         
     } catch (error) {
         console.error('Error al obtener los datos de la solicitud:', error);
-        res.status(500).send('Error al obtener los datos de la solicitud');
+        res.status(500).json({
+            mensaje: 'Error al obtener los datos de la solicitud'});
         
     }
 });
@@ -105,54 +110,64 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(3), upload.array('imagen
         // Comprobamos que ninguno está vacío
         if (!email || !nombre || !dni || !motivo_solicitud || !direccion || !cp || !localidad || !provincia) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('Faltan campos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan campos obligatorios'});
         }
         if (!imagenes || imagenes.length !== 3) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('Debes adjuntar las 3 imágenes');
+            return res.status(400).json({
+                mensaje: 'Debes adjuntar las 3 imágenes'});
         }
         if (!validator.isEmail(email)) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El formato del correo no es correcto');
+            return res.status(400).json({
+                mensaje: 'El formato del correo no es correcto'});
         }
         // Comrpobamos longitudes
         if (motivo_solicitud.length > 250) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El motivo de la solicitud no puede superar los 250 caracteres');
+            return res.status(400).json({
+                mensaje: 'El motivo de la solicitud no puede superar los 250 caracteres'});
         }
         const motivoNormalizado = pulirYNormalizarTexto(motivo_solicitud);
         if (contienePalabrasOfensivas(motivoNormalizado)) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El motivo de la solicitud de gestor contiene palabras ofensivas');
+            return res.status(400).json({
+                mensaje: 'El motivo de la solicitud de gestor contiene palabras ofensivas'});
         }
         // Comprobamos que email y nombre coinciden con los datos del usuario
         const usuario = await cliente.query(`SELECT email, nombre FROM usuario WHERE id_usuario = $1`, [id_usuario]);
         if (email !== usuario.rows[0].email) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El email no coincide con el del perfil');
+            return res.status(400).json({
+                mensaje: 'El email no coincide con el del perfil'});
         }
         if (pulirYNormalizarTexto(nombre) !== pulirYNormalizarTexto(usuario.rows[0].nombre)) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El nombre no coincide con el del perfil');
+            return res.status(400).json({
+                mensaje: 'El nombre no coincide con el del perfil'});
         }
         // Comprobación de cp y dni
         const regexCP = /^(?:0[1-9]|[1-4]\d|5[0-2])\d{3}$/;
         if (!regexCP.test(cp)) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El código postal debe tener el formato correcto');
+            return res.status(400).json({
+                mensaje: 'El código postal debe tener el formato correcto'});
         }
         const regexDNI = /^\d{8}[A-Za-z]$/;
         const regexNIE = /^[XYZ]\d{7}[A-Za-z]$/;
         if (!regexDNI.test(dni) && !regexNIE.test(dni)) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El DNI/NIE no tiene formato válido')
+            return res.status(400).json({
+                mensaje: 'El DNI/NIE no tiene formato válido'})
         }
 
         // Comprobamos que el usuario no tiene una solicitud ya en enviada, ni que tenga una solicitud rechazada con menos de 30 días
         const tieneSolicitud = await cliente.query(`SELECT * FROM solicitud_gestor WHERE usuario_id = $1 ORDER BY fecha_solicitud DESC LIMIT 1`, [id_usuario]);
         if (tieneSolicitud.rows.length !== 0 && tieneSolicitud.rows[0].estado === 'Enviada') {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('Ya tienes una solicitud enviada');
+            return res.status(400).json({
+                mensaje: 'Ya tienes una solicitud enviada'});
         } else if (tieneSolicitud.rows.length !== 0 && tieneSolicitud.rows[0].estado === 'Rechazada') {
             const fecha_resolucion = new Date(tieneSolicitud.rows[0].fecha_resolucion);
             const fecha_actual = new Date();
@@ -161,7 +176,8 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(3), upload.array('imagen
 
             if (diferencia < 30) {
                 await cliente.query('ROLLBACK');
-                return res.status(400).send('Debes esperar 30 días para volver a mandar una solicitud');
+                return res.status(400).json({
+                    mensaje: 'Debes esperar 30 días para volver a mandar una solicitud'});
             }
         }
         // Hacemos la transacción con la consulta INSERT INTO en solicitud_gestor con estado = Enviada y guardamos las imagenes
@@ -181,7 +197,8 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(3), upload.array('imagen
     } catch (error) {
         await cliente.query('ROLLBACK');
         console.error('Error al crear la solicitud de gestor:', error);
-        res.status(500).send('Error al crear la solicitud de gestor');
+        res.status(500).json({
+            mensaje: 'Error al crear la solicitud de gestor'});
         
     } finally {
         cliente.release();
@@ -198,24 +215,29 @@ router.patch('/:id/rechazar', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
         // Comprobamos que existe al solicitud
         const existe = await pool.query(`SELECT * FROM solicitud_gestor WHERE id_solicitud = $1`, [id]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('No existe la solicitud');
+            return res.status(404).json({
+                mensaje: 'No existe la solicitud'});
         }
         // Comprobamos que no está ya rechazada o aceptada
         if (existe.rows[0].estado === 'Rechazada') {
-            return res.status(400).send('La solicitud ya ha sido rechazada');
+            return res.status(400).json({
+                mensaje: 'La solicitud ya ha sido rechazada'});
         }
         if (existe.rows[0].estado === 'Aceptada') {
-            return res.status(400).send('La solicitud ya ha sido aceptada');
+            return res.status(400).json({
+                mensaje: 'La solicitud ya ha sido aceptada'});
         }
         // Marcamos estado = Rechazada y rellenamos los campos correspondientes
         const result = await pool.query(`UPDATE solicitud_gestor SET estado = 'Rechazada', fecha_resolucion = CURRENT_DATE, 
             gestor_id = $1 WHERE id_solicitud = $2`, [req.usuario.idGestor, id]);
 
-        res.status(200).send('Solicitud rechazada correctamente');
+        res.status(200).json({
+            mensaje: 'Solicitud rechazada correctamente'});
         
     } catch (error) {
         console.error('Error al rechazar la solicitud:', error);
-        res.status(500).send('Error al rechazar la solicitud');
+        res.status(500).json({
+            mensaje: 'Error al rechazar la solicitud'});
         
     }
 });
@@ -230,24 +252,29 @@ router.patch('/:id/aceptar', auth, usuarioNoBloqueado, autorizarRol(1, 2), async
     // Comprobamos que existe al solicitud
     const existe = await pool.query(`SELECT * FROM solicitud_gestor WHERE id_solicitud = $1`, [id]);
     if (existe.rows.length === 0) {
-        return res.status(404).send('No existe la solicitud');
+        return res.status(404).json({
+            mensaje: 'No existe la solicitud'});
     }
     // Comprobamos que no está ya rechazada o aceptada
     if (existe.rows[0].estado === 'Rechazada') {
-        return res.status(400).send('La solicitud ya ha sido rechazada');
+        return res.status(400).json({
+            mensaje: 'La solicitud ya ha sido rechazada'});
     }
     if (existe.rows[0].estado === 'Aceptada') {
-        return res.status(400).send('La solicitud ya ha sido aceptada');
+        return res.status(400).json({
+            mensaje: 'La solicitud ya ha sido aceptada'});
     }
     // Marcamos estado = Aceptada y rellenamos los campos correspondientes
     const result = await pool.query(`UPDATE solicitud_gestor SET estado = 'Aceptada', fecha_resolucion = CURRENT_DATE, 
         gestor_id = $1 WHERE id_solicitud = $2`, [req.usuario.idGestor, id]);
 
-    res.status(200).send('Solicitud aceptada correctamente');
+    res.status(200).json({
+        mensaje: 'Solicitud aceptada correctamente'});
     
    } catch (error) {
     console.error('Error al aceptar la solicitud:', error);
-    res.status(500).send('Error al aceptar la solicitud');
+    res.status(500).json({
+        mensaje: 'Error al aceptar la solicitud'});
 
    } 
 });
@@ -261,29 +288,35 @@ router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(3), a
         const existe = await pool.query(`SELECT usuario.id_usuario, usuario.identificador_gestor, usuario.codigo_activacion, usuario.codigo_usado, usuario.email,
             sg.estado, sg.usuario_id FROM usuario JOIN solicitud_gestor sg ON sg.usuario_id = usuario.id_usuario WHERE sg.id_solicitud = $1`, [id]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('No existe la solicitud');
+            return res.status(404).json({
+                mensaje: 'No existe la solicitud'});
         }
         // Comprobamos que pertenece al usuario
         if (Number(existe.rows[0].usuario_id) !== Number(req.usuario.id_usuario)) {
-            return res.status(403).send('No tienes permiso para acceder a esta solicitud');
+            return res.status(403).json({
+                mensaje: 'No tienes permiso para acceder a esta solicitud'});
         }
         // Comprobamos que está aceptada
         if (existe.rows[0].estado !== 'Aceptada') {
-            return res.status(400).send('La solicitud no ha sido aceptada');
+            return res.status(400).json({
+                mensaje: 'La solicitud no ha sido aceptada'});
         }
         // Comprobamos que el usuario no ha usado ya el código
         if (existe.rows[0].codigo_usado) {
-            return res.status(400).send('La cuenta ya ha sido activada');
+            return res.status(400).json({
+                mensaje: 'La cuenta ya ha sido activada'});
         }
         // Reenviamos el correo
-        const enlace = 'https://localhost:3000/solicitudes-gestor/activar-gestor';
+        const enlace = 'http://localhost:3000/solicitudes-gestor/activar-gestor';
         await enviarCredencialesGestor(existe.rows[0].email, enlace, existe.rows[0].identificador_gestor, existe.rows[0].codigo_activacion);
 
-        res.status(200).send('Se ha enviado un nuevo correo con las credenciales');
+        res.status(200).json({
+            mensaje: 'Se ha enviado un nuevo correo con las credenciales'});
 
     } catch (error) {
         console.error('Error al reenviar el correo:', error);
-        res.status(500).send('Error al reenviar el correo');
+        res.status(500).json({
+            mensaje: 'Error al reenviar el correo'});
         
     }
 });

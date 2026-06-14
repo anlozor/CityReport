@@ -20,7 +20,8 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
         // Comprobamos que la incidencia existe
         const incidencia = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [id]);
             if (incidencia.rows.length === 0) {
-                return res.status(404).send('La incidencia no existe');
+                return res.status(404).json({
+                    mensaje: 'La incidencia no existe'});
             }
         // Luego obtenemos los comentarios de la incidencia que no estén eliminados ordenados por fecha de creación de más reciente a más antiguo
         const result = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
@@ -35,7 +36,8 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
         
         // Comprobamos que hay comentarios y sino devolvemos un mensaje indicando que no hay comentarios
         if (result.rows.length === 0) {
-            return res.status(200).send('No hay comentarios en esta incidencia');
+            return res.status(200).json({
+                mensaje: 'No hay comentarios en esta incidencia'});
         }
         
         // Comprobamos si el usuario ha marcado como anónimo el comentario y si es así mostramos su alias en vez de su nombre
@@ -72,7 +74,8 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
         res.status(200).json(comentariosArreglados);
     } catch (error) {
         console.error('Error al obtener los comentarios:', error);
-        res.status(500).send('Error al obtener los comentarios');
+        res.status(500).json({
+            mensaje: 'Error al obtener los comentarios'});
     }
 });
 
@@ -83,22 +86,26 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagen', 1), async (req
         const { texto, incidencia_id, es_anonimo} = req.body;
         // Comprobamos que ninguno esté vacío
         if (!texto || !incidencia_id || es_anonimo === undefined) {
-            return res.status(400).send('Faltan datos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan datos obligatorios'});
         }
 
         // Pulimos texto para evitar espacios en blanco al principio y al final y para evitar que el texto esté compuesto solo por espacios en blanco
         // Comprobamos que el texto no está vacío después de pulirlo
         if (texto.trim().length === 0) {
-            return res.status(400).send('El texto del comentario no puede estar vacío');
+            return res.status(400).json({
+                mensaje: 'El texto del comentario no puede estar vacío'});
         }
         // Comprobamos que no se pasa de la longitud máxima de 250 caracteres
         if (texto.trim().length > 250) {
-            return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
+            return res.status(400).json({
+                mensaje: 'El texto del comentario no puede tener más de 250 caracteres'});
         }
         // Comprobamos que el texto no contiene palabras ofensivas
         const textoNormalizado = pulirYNormalizarTexto(texto);
         if (contienePalabrasOfensivas(textoNormalizado)) {
-            return res.status(400).send('El texto contiene palabras ofensivas');
+            return res.status(400).json({
+                mensaje: 'El texto contiene palabras ofensivas'});
         }
 
         // Obtenemos también el usuario_id del token
@@ -107,7 +114,8 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagen', 1), async (req
         // Comprobamos que la incidencia existe
         const incidencia = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [incidencia_id]);
         if (incidencia.rows.length === 0) {
-            return res.status(404).send('La incidencia no existe');
+            return res.status(404).json({
+                mensaje: 'La incidencia no existe'});
         }
 
         // Añadimos el nuevo comentario en la BD
@@ -123,7 +131,8 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagen', 1), async (req
 
     } catch (error) {
         console.error('Error al añadir el comentario:', error);
-        res.status(500).send('Error al añadir el comentario');
+        res.status(500).json({
+            mensaje: 'Error al añadir el comentario'});
     }
 });
 
@@ -140,11 +149,13 @@ router.patch('/:id/eliminar', auth, usuarioNoBloqueado, async (req, res) => {
         const comentarioExiste = await cliente.query(`SELECT * FROM comentario WHERE id_comentario = $1`, [id]);
         if (comentarioExiste.rows.length === 0) {
             await cliente.query('ROLLBACK');
-            return res.status(404).send('El comentario no existe');
+            return res.status(404).json({
+                mensaje: 'El comentario no existe'});
         }
         if (comentarioExiste.rows[0].esta_eliminado) {
             await cliente.query('ROLLBACK');
-            return res.status(400).send('El comentario ya está eliminado');
+            return res.status(400).json({
+                mensaje: 'El comentario ya está eliminado'});
         }
 
         // Comprobamos si el usuario es el autor del comentario o un gestor, sino no puede eliminar el comentario
@@ -152,7 +163,8 @@ router.patch('/:id/eliminar', auth, usuarioNoBloqueado, async (req, res) => {
         const esGestor = Number(req.usuario.rol_id) === 1 || Number(req.usuario.rol_id) === 2;
         if (!esAutor && !esGestor) {
             await cliente.query('ROLLBACK');
-            return res.status(403).send('No tienes permiso para eliminar este comentario');
+            return res.status(403).json({
+                mensaje: 'No tienes permiso para eliminar este comentario'});
         }
 
         // Ocultamos el comentario en la bd con esta_eliminado = true y rellenamos fecha_eliminacion y eliminado_por
@@ -167,13 +179,15 @@ router.patch('/:id/eliminar', auth, usuarioNoBloqueado, async (req, res) => {
             WHERE comentario_id = $2`, [req.usuario.idGestor, id]);
             
         await cliente.query('COMMIT');
-        res.status(200).send('Comentario eliminado correctamente');
+        res.status(200).json({
+            mensaje: 'Comentario eliminado correctamente'});
             
     } catch (error) {
         await cliente.query('ROLLBACK');
 
         console.error('Error al eliminar comentario:', error);
-        res.status(500).send('Error al eliminar comentario');
+        res.status(500).json({
+            mensaje: 'Error al eliminar comentario'});
             
     } finally {
         cliente.release();
@@ -190,15 +204,18 @@ router.patch('/:id/editar', auth, usuarioNoBloqueado, async (req, res) => {
         // Luego comprobamos que el comentario existe y no está eliminado ya
         const comentarioExiste = await pool.query(`SELECT * FROM comentario WHERE id_comentario = $1`, [id]);
         if (comentarioExiste.rows.length === 0) {
-            return res.status(404).send('El comentario no existe');
+            return res.status(404).json({
+                mensaje: 'El comentario no existe'});
         }
         if (comentarioExiste.rows[0].esta_eliminado) {
-            return res.status(400).send('El comentario está eliminado y no se puede editar');
+            return res.status(400).json({
+                mensaje: 'El comentario está eliminado y no se puede editar'});
         }
         // Comprobamos que el usuario es el autor del comentario, sino no puede editar el comentario
         const esAutor = Number(comentarioExiste.rows[0].usuario_id) === Number(req.usuario.id_usuario);
         if (!esAutor) {
-            return res.status(403).send('No tienes permiso para editar este comentario');
+            return res.status(403).json({
+                mensaje: 'No tienes permiso para editar este comentario'});
         }
 
         // Comprobamos que el comentario no lleva más de 15 minutos creado, sino no se puede editar
@@ -207,23 +224,28 @@ router.patch('/:id/editar', auth, usuarioNoBloqueado, async (req, res) => {
         const limiteTiempo = 15 * 60 * 1000; // 15 minutos en milisegundos
         const diferenciaTiempo = fechaActual - fechaCreacion;
         if (diferenciaTiempo > limiteTiempo) {
-            return res.status(400).send('Hace más de 15 minutos que se creó el comentario y no se puede editar');
+            return res.status(400).json({
+                mensaje: 'Hace más de 15 minutos que se creó el comentario y no se puede editar'});
         }
 
         // Obtenemos del body el nuevo texto del comentario y comprobamos que no está vacío, que no se pasa de la longitud máxima de 250 caracteres y que no contiene palabras ofensivas
         const {texto} = req.body;
         if (!texto) {
-            return res.status(400).send('Falta el texto del comentario');
+            return res.status(400).json({
+                mensaje: 'Falta el texto del comentario'});
         }
         if (texto.trim().length === 0) {
-            return res.status(400).send('El texto del comentario no puede estar vacío');
+            return res.status(400).json({
+                mensaje: 'El texto del comentario no puede estar vacío'});
         }
         if (texto.trim().length > 250) {
-            return res.status(400).send('El texto del comentario no puede tener más de 250 caracteres');
+            return res.status(400).json({
+                mensaje: 'El texto del comentario no puede tener más de 250 caracteres'});
         }
         const textoNormalizado = pulirYNormalizarTexto(texto);
         if (contienePalabrasOfensivas(textoNormalizado)) {
-            return res.status(400).send('El texto del comentario contiene palabras ofensivas');
+            return res.status(400).json({
+                mensaje: 'El texto del comentario contiene palabras ofensivas'});
         }
 
         // Actualizamos el texto del comentario en la BD
@@ -232,7 +254,8 @@ router.patch('/:id/editar', auth, usuarioNoBloqueado, async (req, res) => {
         
     } catch (error) {
         console.error('Error al editar el comentario:', error);
-        res.status(500).send('Error al editar el comentario');
+        res.status(500).json({
+            mensaje: 'Error al editar el comentario'});
     }
 });
 

@@ -26,7 +26,8 @@ router.get('/', async (req, res) => {
         // Emitimos error
         console.error('Error obteniendo votos:', error);
         // Enviamos estado de error de petición HTTP junto con mensaje
-        res.status(500).send('Error al obtener votos');
+        res.status(500).json({
+            mensaje: 'Error al obtener votos'});
     }
 });
 
@@ -37,13 +38,15 @@ router.post('/', async (req, res) => {
 
         // Control de error si alguna de las tres no está en el body
         if (!usuario_id || !incidencia_id) {
-            return res.status(400).send('Faltan datos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan datos obligatorios'});
         }
         // Comprobamos también aquí además de en la bd si el usuario ya ha hecho un voto en la incidencia
         const existe = await pool.query(`SELECT 1 FROM voto WHERE usuario_id = $1 AND incidencia_id = $2`,
             [usuario_id, incidencia_id]);
         if (existe.rows.length > 0) {
-            return res.status(409).send('El usuario ya ha votado esta incidencia');
+            return res.status(409).json({
+                mensaje: 'El usuario ya ha votado esta incidencia'});
         }
 
         const result = await pool.query(

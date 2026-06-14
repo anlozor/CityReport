@@ -24,7 +24,8 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         
     } catch (error) {
         console.error('Error al obtener los cambios de estado:', error);
-        res.status(500).send('Error al obtener los cambios de estado');
+        res.status(500).json({
+            mensaje: 'Error al obtener los cambios de estado'});
     }
 });
 
@@ -41,12 +42,14 @@ router.get('/incidencia/:idIncidencia', auth, usuarioNoBloqueado, async (req, re
         // Comprobamos que la incidencia existe
         const incidenciaExiste = await pool.query(`SELECT * FROM incidencia WHERE id_incidencia = $1`, [idIncidencia]);
         if (incidenciaExiste.rows.length === 0) {
-            return res.status(404).send('La incidencia no existe');
+            return res.status(404).json({
+                mensaje: 'La incidencia no existe'});
         }
         // Si el usuario no es gestor, comprobamos que es el creador de la incidencia
         const esGestor = Number(req.usuario.rol_id) === 1 || Number(req.usuario.rol_id) === 2;
         if (!esGestor && Number(incidenciaExiste.rows[0].usuario_id) !== Number(idUsuario)) {
-            return res.status(403).send('No tienes permisos para ver los cambios de estado de esta incidencia');
+            return res.status(403).json({
+                mensaje: 'No tienes permisos para ver los cambios de estado de esta incidencia'});
         }
         // Obtenemos los cambios de estado de la incidencia
         const result = await pool.query(`SELECT cambio_estado.id_cambio_estado, cambio_estado.incidencia_id, 
@@ -60,7 +63,8 @@ router.get('/incidencia/:idIncidencia', auth, usuarioNoBloqueado, async (req, re
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los cambios de estado de la incidencia:', error);
-        res.status(500).send('Error al obtener los cambios de estado de la incidencia');
+        res.status(500).json({
+            mensaje: 'Error al obtener los cambios de estado de la incidencia'});
     }
 });
 

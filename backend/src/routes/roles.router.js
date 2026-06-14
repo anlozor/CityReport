@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los roles:', error);
-        res.status(500).send('Error al obtener el listado de roles');
+        res.status(500).json({
+            mensaje: 'Error al obtener el listado de roles'});
     }
 });
 
@@ -29,13 +30,15 @@ router.get('/:id', async (req, res) => {
         const result = await pool.query(`SELECT * FROM rol WHERE id_rol = $1`, [id]);
         // Comprobamos que nos ha devuelto algo
         if (result.rows.length === 0) {
-            return res.status(404).send('Rol no encontrado');
+            return res.status(404).json({
+                mensaje: 'Rol no encontrado'});
         }
         // En caso contrario devolvemos el resultado encontrado
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error('Error al obtener el rol:', error);
-        res.status(500).send('Error al buscar el rol');
+        res.status(500).json({
+            mensaje: 'Error al buscar el rol'});
     }
 });
 

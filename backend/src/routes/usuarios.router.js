@@ -26,7 +26,8 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         // Emitimos error
         console.error('Error al obtener los usuarios:', error);
         // Estado error petición HTTP junto a mensaje
-        res.status(500).send('Error al obtener el listado de usuarios');
+        res.status(500).json({
+            mensaje: 'Error al obtener el listado de usuarios'});
     }
 });
 
@@ -40,7 +41,8 @@ router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
         
     } catch (error) {
         console.error('Error al obtener los datos del perfil:', error);
-        res.status(500).send('Error al obtener los datos del perfil');
+        res.status(500).json({
+            mensaje: 'Error al obtener los datos del perfil'});
         
     }
 });
@@ -59,14 +61,16 @@ router.get('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res
             FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
         // Comprobamos que nos ha devuelto algo y sino devolvemos error
         if (result.rows.length === 0) {
-            return res.status(404).send('Usuario no encontrado');
+            return res.status(404).json({
+                mensaje: 'Usuario no encontrado'});
         }
 
         res.status(200).json(result.rows[0]);
 
     } catch (error) {
         console.error('Error al buscar usuario:', error);
-        res.status(500).send('Error al buscar usuario');
+        res.status(500).json({
+            mensaje: 'Error al buscar usuario'});
     }
 
 });
@@ -79,19 +83,23 @@ router.post('/registro', async (req, res) => {
     
         // Comprobación por si algo falta
         if (!nombre || !email || !contraseña) {
-            return res.status(400).send('Faltan datos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan datos obligatorios'});
         }
         // Comprobamos que el correo tiene formato correcto
         if (!validator.isEmail(email)) {
-            return res.status(400).send('El correo no tiene el formato correcto');
+            return res.status(400).json({
+                mensaje: 'El correo no tiene el formato correcto'});
         }
         // Se puede hacer una validación para comprobar que el usuario no existe ya en la BD(por ejemplo con el nombre)
         const existe = await pool.query(`SELECT nombre, email FROM usuario WHERE nombre = $1 OR email = $2`, [nombre, email]);
         if (existe.rows.length > 0) {
             if (existe.rows[0].nombre === nombre) {
-                return res.status(409).send('Ya existe un usuario con el mismo nombre');
+                return res.status(409).json({
+                    mensaje: 'Ya existe un usuario con el mismo nombre'});
             } else if (existe.rows[0].email === email) {
-                return res.status(409).send('Ya existe un usuario con el mismo email');
+                return res.status(409).json({
+                    mensaje: 'Ya existe un usuario con el mismo email'});
             }
         }
 
@@ -106,7 +114,8 @@ router.post('/registro', async (req, res) => {
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error creando usuario:', error);
-        res.status(500).send('Error al crear usuario');
+        res.status(500).json({
+            mensaje: 'Error al crear usuario'});
     }
 });
 
@@ -117,13 +126,16 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
         const {nombre, email, rol_id} = req.body;
         // Comprobamos que no falta ninguno
         if (!nombre || !email || !rol_id) {
-            return res.status(400).send('Faltan campos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan campos obligatorios'});
         } else if (rol_id !== 1 && rol_id !== 2) {
-            return res.status(400).send('El rol debe ser gestor o gestor avanzado');
+            return res.status(400).json({
+                mensaje: 'El rol debe ser gestor o gestor avanzado'});
         }
         // Comprobamos el formato del correo
         if (!validator.isEmail(email)) {
-            return res.status(400).send('El correo no tiene el formato correcto');
+            return res.status(400).json({
+                mensaje: 'El correo no tiene el formato correcto'});
         }
 
         // Generamos contraseña aleatoria
@@ -164,7 +176,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 SET identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
                 WHERE email = $5`, [idGestor, alias, rol_id, codigo_activacion, email]);
 
-            const enlace = 'https://localhost:3000/usuarios/activar-gestor';
+            const enlace = 'http://localhost:3000/usuarios/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
 
             res.status(200).json({
@@ -179,7 +191,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7) RETURNING *`, 
                 [nombre, email, rol_id, contraseñaHashed, idGestor, alias, codigo_activacion]);
 
-            const enlace = 'https://localhost:3000/usuarios/activar-gestor';
+            const enlace = 'http://localhost:3000/usuarios/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
         
             res.status(201).json({
@@ -189,7 +201,8 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
 
     } catch (error) {
         console.error('Error al crear gestor:', error);
-        res.status(500).send('Error al crear el gestor');
+        res.status(500).json({
+            mensaje: 'Error al crear el gestor'});
         
     }
 });
@@ -201,24 +214,29 @@ router.patch('/verificar-activacion', async (req, res) => {
         // Leemos del body el id y el codigo de activación
         const {codigo_activacion, identificador_gestor} = req.body;
         if (!identificador_gestor || !codigo_activacion) {
-            return res.status(400).send('Faltan cmapos obligatorios');
+            return res.status(400).json({
+                mensaje: 'Faltan cmapos obligatorios'});
         }
         // Comprobamos que el usuario existe
         const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE identificador_gestor = $1`, [identificador_gestor]);
         if (usuarioExiste.rows.length === 0) {
-            return res.status(404).send('El identificador no existe');
+            return res.status(404).json({
+                mensaje: 'El identificador no existe'});
         }
         // Comprobamos que el usuario no está bloqueado
         if (usuarioExiste.rows[0].esta_bloqueado) {
-            return res.status(403).send('El usuario está bloqueado');
+            return res.status(403).json({
+                mensaje: 'El usuario está bloqueado'});
         }
         // Comprobamos que no está usado el código
         if (usuarioExiste.rows[0].codigo_usado) {
-            return res.status(400).send('El código de activación ya ha sido usado');
+            return res.status(400).json({
+                mensaje: 'El código de activación ya ha sido usado'});
         }
         // Comprobamos que el código de activación del body corresponde con el que aparece en el usuario en la bd
         if (codigo_activacion !== usuarioExiste.rows[0].codigo_activacion) {
-            return res.status(400).send('El código de activación no es correcto');
+            return res.status(400).json({
+                mensaje: 'El código de activación no es correcto'});
         }
         // Marcamos el código como usado y lo borramos
         const result = await pool.query(`UPDATE usuario SET codigo_usado = true, codigo_activacion = null 
@@ -237,7 +255,8 @@ router.patch('/verificar-activacion', async (req, res) => {
         
     } catch (error) {
         console.error('Error al verificar el código:', error);
-        res.status(500).send('Error al verificar el código');
+        res.status(500).json({
+            mensaje: 'Error al verificar el código'});
         
     }
 });
@@ -252,11 +271,13 @@ router.patch('/restablecer-contraseña', authActivacion, usuarioNoBloqueado, asy
         // Leemos del body la contraseña de los dos campos
         const {contraseña1, contraseña2} = req.body;
         if (!contraseña1 || !contraseña2) {
-            return res.status(400).send('Debes rellenar los dos campos');
+            return res.status(400).json({
+                mensaje: 'Debes rellenar los dos campos'});
         }
         // Comprobamos que coinciden
         if (contraseña1 !== contraseña2) {
-            return res.status(400).send('Las contraseñas deben coincidir');
+            return res.status(400).json({
+                mensaje: 'Las contraseñas deben coincidir'});
         }
         // Hacemos el hash de la contraseña
         const contraseñaHashed = await bcrypt.hash(contraseña1, 10);
@@ -276,7 +297,8 @@ router.patch('/restablecer-contraseña', authActivacion, usuarioNoBloqueado, asy
         
     } catch (error) {
         console.error('Error al cambiar la contraseña:', error);
-        res.status(500).send('Error al cambiar la contraseña');
+        res.status(500).json({
+            mensaje: 'Error al cambiar la contraseña'});
         
     }
 });
@@ -289,11 +311,13 @@ router.patch('/contraseña-olvidada', async (req, res) => {
         const {email} = req.body;
         // Comprobamos que no está vacío
         if (!email) {
-            return res.status(400).send('Debes poner un email');
+            return res.status(400).json({
+                mensaje: 'Debes poner un email'});
         }
         // Comprobamos el formato del correo
         if (!validator.isEmail(email)) {
-            return res.status(400).send('El correo no tiene el formato correcto');
+            return res.status(400).json({
+                mensaje: 'El correo no tiene el formato correcto'});
         }
         // Comprobamos que existe en la bd
         const existe = await pool.query(`SELECT id_usuario FROM usuario WHERE email = $1`, [email]);
@@ -306,7 +330,7 @@ router.patch('/contraseña-olvidada', async (req, res) => {
             }, process.env.JWT_SECRET,
             {expiresIn: '15m'});
             // Enviamos mail con link
-            const enlace = `https://localhost:3000/usuarios/restablecer-contraseña?token=${token}`;
+            const enlace = `http://localhost:3000/usuarios/restablecer-contraseña?token=${token}`;
             await enviarRecuperacion(email, enlace);
 
         }
@@ -317,7 +341,8 @@ router.patch('/contraseña-olvidada', async (req, res) => {
 
     } catch (error) {
         console.error('Error al enviar enlace para restablecer contraseña:', error);
-        res.status(500).send('Error al enviar enlace para restablecer contraseña');
+        res.status(500).json({
+            mensaje: 'Error al enviar enlace para restablecer contraseña'});
         
     }
 });
@@ -329,28 +354,33 @@ router.post('/login', async (req, res) => {
         const {email, contraseña} = req.body;
         // Comprobamos que están todos los datos
         if (!email || !contraseña) {
-            return res.status(400).send('Faltan datos para login');
+            return res.status(400).json({
+                mensaje: 'Faltan datos para login'});
         }
         // Comprobamos que el correo tiene el formato correcto
         if (!validator.isEmail(email)) {
-            return res.status(400).send('El correo no tiene el formato correcto');
+            return res.status(400).json({
+                mensaje: 'El correo no tiene el formato correcto'});
         }
 
         // Buscamos al usuario en la BD y comprobaos que está en la BD
         const existe = await pool.query(`SELECT * FROM usuario WHERE email = $1`, [email]);
         if (existe.rows.length === 0) {
-            return res.status(404).send('Usuario no encontrado');
+            return res.status(404).json({
+                mensaje: 'Usuario no encontrado'});
         }
         // Comprobamos que no está bloqueado
         const usuario = existe.rows[0];
         if (usuario.esta_bloqueado) {
-            return res.status(403).send('Usuario bloqueado');
+            return res.status(403).json({
+                mensaje: 'Usuario bloqueado'});
         }
 
         // Comprobamos qu la contraseña introducida coincide con la de la BD
         const contraseñaCoincide = await bcrypt.compare(contraseña, usuario.contraseña);
         if (!contraseñaCoincide) {
-            return res.status(400).send('Contraseña incorrecta');
+            return res.status(400).json({
+                mensaje: 'Contraseña incorrecta'});
         }
 
         // Creamos el JWT
@@ -367,7 +397,8 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Error al hacer login:', error);
-        res.status(500).send('Error en login');
+        res.status(500).json({
+            mensaje: 'Error en login'});
     }
 });
 
@@ -379,7 +410,8 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
         const existe = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
         // Comprobamos que existe el usuario
         if (existe.rows.length === 0) {
-            return res.status(404).send('El usuario no existe');
+            return res.status(404).json({
+                mensaje: 'El usuario no existe'});
         }
 
         /*************PATCH FIJO ORIGINAL*************/
@@ -410,7 +442,8 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
                 datos[campo] = await bcrypt.hash(datos[campo], 10);
             }
             if (campo === 'email' && !validator.isEmail(datos[campo])) {
-                return res.status(400).send('El formato del correo no es correcto');
+                return res.status(400).json({
+                    mensaje: 'El formato del correo no es correcto'});
             }
 
             campos.push(`${campo} = $${contador}`);
@@ -428,7 +461,8 @@ router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
 
     } catch (error) {
         console.error('Error al actualizar usuario:', error);
-        res.status(500).send('Error al actualizar usuario');
+        res.status(500).json({
+            mensaje: 'Error al actualizar usuario'});
     }
 });
 
@@ -440,11 +474,13 @@ router.patch('/:id/desbloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), a
         // Comprobamos que el usuario existe
         const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
         if (usuarioExiste.rows.length === 0) {
-            return res.status(404).send('El usuario no existe');
+            return res.status(404).json({
+                mensaje: 'El usuario no existe'});
         }
         // Comprobamos que no esté ya desbloqueado/sin bloquear
         if (!usuarioExiste.rows[0].esta_bloqueado) {
-            return res.status(400).send('El usuario no está bloqueado');
+            return res.status(400).json({
+                mensaje: 'El usuario no está bloqueado'});
         }
         // Modificamos los campos y lo desbloqueamos
         const result = await pool.query(`UPDATE usuario SET esta_bloqueado = false, bloqueado_por = NULL, motivo_bloqueo = NULL, fecha_bloqueo = NULL WHERE id_usuario = $1`, [id]);
@@ -453,7 +489,8 @@ router.patch('/:id/desbloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), a
         
     } catch (error) {
         console.error('Error al desbloquear el usuario:', error);
-        res.status(500).send('Error al desbloquear el usuario');
+        res.status(500).json({
+            mensaje: 'Error al desbloquear el usuario'});
         
     }
 });
@@ -467,16 +504,19 @@ router.patch('/:id/bloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
         // Obtenemos el motivo del bloqueo y comprobamos que no está vacío y que no se pasa del límite de 250 caracteres
         const {motivo_bloqueo} = req.body;
         if (motivo_bloqueo === undefined || motivo_bloqueo.length > 250) {
-            return res.status(400).send('El motivo del bloqueo es obligatorio y no debe superar los 250 caracteres');
+            return res.status(400).json({
+                mensaje: 'El motivo del bloqueo es obligatorio y no debe superar los 250 caracteres'});
         }
         // Comprobamos que el usuario existe
         const usuarioExiste = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
         if (usuarioExiste.rows.length === 0) {
-            return res.status(404).send('El usuario no existe');
+            return res.status(404).json({
+                mensaje: 'El usuario no existe'});
         }
         // Comprobamos que no esté ya bloqueado
         if (usuarioExiste.rows[0].esta_bloqueado === true) {
-            return res.status(400).send('El usuario ya está bloqueado');
+            return res.status(400).json({
+                mensaje: 'El usuario ya está bloqueado'});
         }
         // Marcamos el usuario como bloqueado rellenando esta_bloqueado, bloqueado_por, motivo_bloqueo y fecha_bloqueo
         const result = await pool.query('UPDATE usuario SET esta_bloqueado = true, bloqueado_por = $1, motivo_bloqueo = $2, fecha_bloqueo = CURRENT_DATE WHERE id_usuario = $3 RETURNING *', [idGestor, motivo_bloqueo, id]);
@@ -485,7 +525,8 @@ router.patch('/:id/bloquear', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
         
     } catch (error) {
         console.error('Error al bloquear el usuario:', error);
-        res.status(500).send('Error al bloquear el usuario');
+        res.status(500).json({
+            mensaje: 'Error al bloquear el usuario'});
         
     }
 });

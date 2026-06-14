@@ -18,7 +18,8 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los estados:', error);
-        res.status(500).send('Error al obtener los estados');
+        res.status(500).json({
+            mensaje: 'Error al obtener los estados'});
     }
 });
 
@@ -29,7 +30,8 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
         const {nombre} = req.body;
         // Comprobamos que el nombre no esté vacío
         if (!nombre) {
-            return res.status(400).send('Falta el nombre del estado');
+            return res.status(400).json({
+                mensaje: 'Falta el nombre del estado'});
         }
         // Comprobamos que el estado no existe ya en la BD sin normalización
         //const estadoExiste = await pool.query(`SELECT * FROM estado_incidencia WHERE nombre = $1`, [nombre]);
@@ -46,14 +48,16 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) 
         const estadoExisteNormalizado = await pool.query(`SELECT * FROM estado_incidencia 
             WHERE unaccent(lower(trim(nombre))) = $1`, [nombreNormalizado]);
         if (estadoExisteNormalizado.rows.length > 0) {
-            return res.status(409).send('El estado ya existe');
+            return res.status(409).json({
+                mensaje: 'El estado ya existe'});
         }
         // Insertamos el nuevo estado en la base de datos con trim para eliminar espacios al principio y al final
         const result = await pool.query(`INSERT INTO estado_incidencia (nombre) VALUES ($1) returning *`, [nombre.trim()]);
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error al añadir el estado:', error);
-        res.status(500).send('Error al añadir el estado');
+        res.status(500).json({
+            mensaje: 'Error al añadir el estado'});
     }
 });
 

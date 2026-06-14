@@ -4,7 +4,8 @@ const auth = (req, res, next) => { // Aquí va la función
     const authHeader = req.headers.authorization;
     // Comprobamos que no está vacío
     if (!authHeader) {
-        return res.status(401).send('Token requerido');
+        return res.status(401).json({
+            mensaje: 'Token requerido'});
     }
     // 2. Sacamos el token
     const token = authHeader.split(' ')[1]; // con split separamos el string por espacios, un ejemplo de token descifrado es "Bearer abc123"
