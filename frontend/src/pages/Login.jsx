@@ -1,0 +1,81 @@
+// Imports
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/loginService";
+
+function Login() {
+    // useState se usa para datos que cambian, como un contador que cambia según los botones que pulses
+    // Los input o cuadros de texto se guardan en estado
+    const [email, setEmail] = useState("");
+    const [contraseña, setContraseña] = useState("");
+    const [mensaje, setMensajeLogin] = useState("");
+    const navigate = useNavigate();
+
+    // Función para enviar el formulario
+    const handleSubmit = async (e) => { // e de Evento, en este caso el submit del formulario
+        e.preventDefault(); // Para que no haga comportamiento normal de formulario y mandarle yo lo que quiero que haga
+
+        try {
+            const {response, data} = await login(email, contraseña);
+
+            /*******************/
+            console.log("Código:", response.status);
+            console.log("Datos:", data);
+            /*******************/
+
+            // Una vez dado a login y recibida la respuesta
+            setMensajeLogin(data.mensaje);
+
+            // Si la respuesta del backend es que todo ok (códigos 200-299), guardamos el token
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                console.log("Token guardado");
+                navigate("/mapa");
+            } else {
+                localStorage.removeItem("token"); // Así si estoy haciendo pruebas no se me queda guardado el token innecesariamente
+            }
+            console.log("Respuesta backend:", data);
+            
+        } catch (error) {
+            console.error("Error de login:", error);
+            setMensajeLogin("Error al conectar con el servidor");
+            
+        }
+    };
+
+    return (
+        <>
+            <h1>Login</h1>
+
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
+                <br/><br/>
+
+                <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={contraseña}
+                    onChange={(e) => setContraseña(e.target.value)}
+                />
+
+                <br/><br/>
+
+                <button type="Submit">Entrar</button>
+            </form>
+
+            <br/>
+
+            <p>{mensaje}</p>
+    </>
+    );
+    
+}
+
+// Exports
+export default Login;
