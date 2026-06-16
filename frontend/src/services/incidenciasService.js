@@ -6,9 +6,13 @@ export async function getIncidencias() {
         }
     );
 
-    const data = await response.json();
+    if (!response.ok) {
+        throw new Error("Error al obtener incidencias");
+    }
 
-    return {response, data};
+    //const data = await response.json();
+
+    return await response.json();
     
 }
 
