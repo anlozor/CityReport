@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getIncidencias } from "../services/incidenciasService";
+import TarjetaIncidencia from "../components/TarjetaIncidencia";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
@@ -29,6 +30,15 @@ function MapaIncidencias() {
                 {" "}
                 {incidencias.length}
             </h2>
+
+            <ul>
+                {incidencias.map((incidencia) => (
+                    <TarjetaIncidencia
+                        key={incidencia.id_incidencia}
+                        incidencia={incidencia}
+                    />
+                ))}
+            </ul>
             <p>Aquí irá el mapa</p>
         </>
     );

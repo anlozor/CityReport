@@ -72,3 +72,10 @@ pool.query('SELECT NOW()', (err, result) => {
 app.listen(PORT, () => {
     console.log(`Servidor levantado en puerto ${PORT}`);
 });
+
+// Para poder capturar mensajes de error como los del multer que van por cb, y los mandamos al frontend como json
+app.use((err, req, res, next) => {
+    res.status(400).json({
+        mensaje: err.message
+    });
+});

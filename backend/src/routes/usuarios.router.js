@@ -388,7 +388,7 @@ router.post('/login', async (req, res) => {
             id_usuario: usuario.id_usuario,
             rol_id: usuario.rol_id,
             idGestor: usuario.identificador_gestor || null
-        }, process.env.JWT_SECRET, {expiresIn: '30m'});
+        }, process.env.JWT_SECRET, {expiresIn: '1h'});
 
         // Mandamos la respuesta
         res.json({
