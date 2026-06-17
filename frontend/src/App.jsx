@@ -1,6 +1,5 @@
 // Imports
 import { useState } from "react";
-import Login from "./pages/Login";
 import AppRouter from "./routes/AppRouter";
 
 function App() {
