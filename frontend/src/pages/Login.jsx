@@ -44,35 +44,45 @@ function Login() {
     };
 
     return (
-        <>
-            <h1>Login</h1>
+        <div
+            style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+                width: "100vw"
+            }}
+        >
+            <div>
+                <h1>Login</h1>
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
 
-                <br/><br/>
+                    <br/><br/>
 
-                <input
-                    type="password"
-                    placeholder="Contraseña"
-                    value={contraseña}
-                    onChange={(e) => setContraseña(e.target.value)}
-                />
+                    <input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={contraseña}
+                        onChange={(e) => setContraseña(e.target.value)}
+                    />
 
-                <br/><br/>
+                    <br/><br/>
 
-                <button type="Submit">Entrar</button>
-            </form>
+                    <button type="Submit">Entrar</button>
+                </form>
 
-            <br/>
+                <br/>
 
-            <p>{mensaje}</p>
-    </>
+                <p>{mensaje}</p>
+            </div>
+    </div>
     );
     
 }

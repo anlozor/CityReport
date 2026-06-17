@@ -6,6 +6,7 @@ import { votarIncidencia } from '../services/votosService';
 import { useSVGOverlay } from 'react-leaflet/SVGOverlay';
 import { useAsyncError } from 'react-router-dom';
 import { sacarUsuariodelToken } from '../services/despiezarTokenService';
+import { getIncidenciaId } from '../services/incidenciasService';
 
 function FixMapSize({incidencias}) {
     const map = useMap();
@@ -45,6 +46,20 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
         }
     };
 
+    const handleVerDetalles = async (id_incidencia) => {
+        try {
+            const {response, data} = await getIncidenciaId(id_incidencia);
+
+            if (!response.ok) {
+                toast.error(data?.mensaje);
+                return;
+            }
+            onVerDetalles(data); // Aquí mandamos la info completa de la incidencia
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <MapContainer
             center={madrid}
@@ -65,7 +80,7 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                     <Popup>
                         <div>
                             <h3>{inc.titulo}</h3>
-                            <p>{inc.categoria}</p>
+                            <p>Categoría: {inc.categoria_nombre}</p>
                             <p>{inc.num_votos}</p>
                             <button
                                 onClick={() => handleVotar(inc.id_incidencia)}
@@ -75,9 +90,9 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                             </button>
 
                             <button
-                                onClick={() => onVerDetalles(inc)}
+                                onClick={() => handleVerDetalles(inc.id_incidencia)}
                             >
-                                Ver detalles
+                                Ver detalles de la incidencia
                             </button>
                         </div>
                     </Popup>

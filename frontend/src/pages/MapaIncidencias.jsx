@@ -1,20 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getIncidencias } from "../services/incidenciasService";
 import TarjetaIncidencia from "../components/TarjetaIncidencia";
 import MapaLeaflet from "../components/MapaLeaflet";
 import { toast } from "react-toastify";
-
+import { sacarRoldelToken } from "../services/despiezarTokenService";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
     const [abrirLista, setAbrirLista] = useState(false);
     const [incidenciaSeleccionada, setIncidenciaSeleccionada] = useState(null);
 
+    const [textoComentario, setTextoComentario] = useState("");
+    const [esAnonimo, setEsAnonimo] = useState(false);
+    const [imagenComentario, setImagenComentario] = useState(null);
+
+    const rol_id = sacarRoldelToken();
+
+    const fileInputRef = useRef(null);
+
     const actualizarVoto = (id_incidencia) => {
         setIncidencias(prev => prev.map(inc => inc.id_incidencia === id_incidencia ? {...inc, num_votos: Number(inc.num_votos) + 1} : inc));
     };
 
+    // Cada vez que se carga, se cargan las incidencias y se resetean los campos
     useEffect(() => { cargarIncidencias();}, []);
+    useEffect(() => {
+        setTextoComentario("");
+        setImagenComentario(null);
+        setEsAnonimo(false);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = null;
+        }
+    }, [incidenciaSeleccionada]);
 
     const cargarIncidencias = async () => {
         try {
@@ -42,20 +60,120 @@ function MapaIncidencias() {
                         top: 0,
                         right: 0,
                         width: "400px",
-                        height: "100%",
+                        height: "100vh",
                         background: "white",
-                        zIndex: 2000,
+                        zIndex: 3000,
                         overflowY: "auto",
-                        boxShadow: "-2px 0 8px rgba(0,0,0,0.2)"
+                        boxShadow: "-4px 0 12px rgba(0,0,0,0.2)",
+                        transition: "transform 0.3s ease",
+                        padding: "20px",
+                        boxSizing: "border-box"
                     }}
                 >
-                    <button onClick={() => setIncidenciaSeleccionada(null)}>X</button>
-                    <h2>{incidenciaSeleccionada.titulo}</h2>
-                    <p>
+                    <button
+                        onClick={() => setIncidenciaSeleccionada(null)}
+                        style={{
+                            float: "right",
+                            marginBottom: "15px"
+                        }}
+                    >X</button>
+                    <h2 style={{marginBottom: "15px"}}>{incidenciaSeleccionada.titulo}</h2>
+                    <p style={{marginBottom: "10px"}}>
                         <strong>Categoría:</strong>{" "}
-                        {incidenciaSeleccionada.categoria}
+                        {incidenciaSeleccionada.categoria_nombre}
                     </p>
-                    <p>{incidenciaSeleccionada.descripcion}</p>
+                    <p style={{lineHeight: "1.5"}}>{incidenciaSeleccionada.descripcion}</p>
+                    {incidenciaSeleccionada.imagenes?.length > 0 && (
+                        <div style={{marginTop: "15px"}}>
+                            {incidenciaSeleccionada.imagenes.map((img) => (
+                                <img
+                                    key={img.id_imagen}
+                                    src={img.url}
+                                    alt="incidencia"
+                                    style={{
+                                        width: "100%",
+                                        marginBottom: "10px",
+                                        borderRadius: "8px"
+                                    }}/>
+                            ))}
+                        </div>
+                    )}
+                    <textarea
+                        value={textoComentario}
+                        onChange={(e) => setTextoComentario(e.target.value)}
+                        rows={4}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            resize: "vertical"
+                        }}
+                    />
+                    {rol_id === 3 && (
+                        <label
+                            style={{
+                                display: "flex",
+                                gap: "8px",
+                                marginTop: "10px"
+                            }}
+                        >
+                        <input
+                            type="checkbox"
+                            checked={esAnonimo}
+                            onChange={(e) => setEsAnonimo(e.target.checked)}
+                        /> Anónimo
+                        </label>
+                    )}
+                    <div
+                        style={{marginTop: "15px"}}
+                    >
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImagenComentario(e.target.files[0] || null)}
+                        />
+                    </div>
+                    {imagenComentario && (
+                        <img
+                            src={URL.createObjectURL(imagenComentario)}
+                            alt="Vista previa"
+                            style={{
+                                width: "100%",
+                                marginTop: "10px",
+                                borderRadius: "8px"
+                            }}
+                        />
+                    )}
+                    <button
+                        style={{
+                            marginTop: "15px",
+                            width: "100%"
+                        }}
+                    >
+                        Publicar comentario
+                    </button>
+                    <div
+                        style={{
+                            marginTop: "20px",
+                            maxHeight: "250px",
+                            overflowY: "auto",
+                            borderTop: "1px solid #ddd",
+                            paddingTop: "10px"
+                        }}
+                    >
+                        <h4>Comentarios</h4>
+                        {incidenciaSeleccionada.comentarios?.length > 0 ? (
+                            incidenciaSeleccionada.comentarios.map((c, i) => (
+                                <div key={i} style={{marginBlock: "10px"}}>
+                                    <strong>{c.autor}</strong>
+                                    <p style={{margin: 0}}>{c.texto}</p>
+                                    <small>{new Date(c.fecha_creacion).toLocaleString()}</small>
+                                </div>
+                            ))
+                        ) : (
+                            <p>Aún no hay comentarios en esta incidencia</p>
+                        )}
+                    </div>
                 </div>
             )}
             {abrirLista && (
