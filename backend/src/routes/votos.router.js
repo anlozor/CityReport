@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST -> Crear voto y actualizar prioridad de incidencia
+// POST -> Crear voto y actualizar prioridad de incidencia y número de votos
 router.post('/', async (req, res) => {
     try {
         const {usuario_id, incidencia_id} = req.body;
