@@ -111,7 +111,7 @@ router.post('/registro', async (req, res) => {
             let numero = ultimoUsuario.rows[0].alias.replace('usuario', '');
             numero = parseInt(numero);
             numero ++;
-            aliasAsignado = 'usuario' + String(numero).padStart(4, '0');
+            aliasAsignado = 'usuario' + String(numero).padStart(6, '0');
         }
 
         // Hacemos el hash de la contraseña

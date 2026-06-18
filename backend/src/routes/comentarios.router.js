@@ -33,7 +33,7 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
             ORDER BY comentario.fecha_creacion DESC`, [id]);
         // Además, utilizamos un join para obtener el nombre del usuario que ha hecho el comentario y su alias por si ha marcado el comentario como anónimo
         // Y otro join para poder obtener las imagenes relacionadas a cada comentario
-        
+        console.log("RESULTADO:", result.rows);
         // Comprobamos que hay comentarios y sino devolvemos un mensaje indicando que no hay comentarios
         if (result.rows.length === 0) {
             return res.status(200).json({

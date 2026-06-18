@@ -195,7 +195,10 @@ const getIncidenciaId = async (req, res) => {
         }
         // La de comentarios
         const comentarios = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
-            CASE WHEN comentario.es_anonimo = true THEN usuario.alias ELSE usuario.nombre END AS autor
+            CASE 
+                WHEN usuario.identificador_gestor IS NOT NULL THEN usuario.identificador_gestor
+                WHEN comentario.es_anonimo = true THEN usuario.alias ELSE usuario.nombre 
+            END AS autor
             FROM comentario
             LEFT JOIN usuario ON usuario.id_usuario = comentario.usuario_id
             WHERE incidencia_id = $1 AND esta_eliminado = false

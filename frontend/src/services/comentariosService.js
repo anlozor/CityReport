@@ -20,3 +20,14 @@ export const crearComentario = async (texto, incidencia_id, es_anonimo, imagen) 
 
     return {response, data};
 };
+
+export const obtenerComentariosIncidencia = async (id_incidencia) => {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:3000/comentarios/incidencia/${id_incidencia}`,{
+        headers: {Authorization: `Bearer ${token}`}
+    });
+    const data = await response.json();
+
+    return {response, data};
+};
