@@ -194,18 +194,29 @@ const getIncidenciaId = async (req, res) => {
                 mensaje: 'Incidencia no encontrada'});
         }
         // La de comentarios
-        const comentarios = await pool.query(`SELECT comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
+        const comentarios = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
             CASE WHEN comentario.es_anonimo = true THEN usuario.alias ELSE usuario.nombre END AS autor
             FROM comentario
             LEFT JOIN usuario ON usuario.id_usuario = comentario.usuario_id
             WHERE incidencia_id = $1 AND esta_eliminado = false
             ORDER BY comentario.fecha_creacion DESC`, [id]);
+        // Junto con las imágenes de cada comentario
+        let comentariosConImagenes = [];
+        for (const comentario of comentarios.rows) {
+            const imagenesComentarios = await pool.query(`SELECT * FROM imagen WHERE comentario_id = $1 AND esta_eliminada = false`, 
+                [comentario.id_comentario]);   
+
+            comentariosConImagenes.push({
+                ...comentario,
+                imagenesComentarios: imagenesComentarios.rows
+            });
+        }
 
         // La de imagenes
         const imagenes = await pool.query(`SELECT * FROM imagen WHERE incidencia_id = $1 AND esta_eliminada = false`, [id]);
 
         // Unimos las 3 partes
-        const incidenciaCompleta = {...infoIncidencia.rows[0], comentarios: comentarios.rows, imagenes: imagenes.rows};
+        const incidenciaCompleta = {...infoIncidencia.rows[0], comentarios: comentariosConImagenes, imagenes: imagenes.rows};
 
         res.status(200).json(incidenciaCompleta);
         

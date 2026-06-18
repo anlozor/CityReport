@@ -14,7 +14,7 @@ const guardarImagenes = async (imagenes, usuario_id, incidencia_id = null, comen
     for (const imagen of imagenes) {
         const imagenSubida = await pool.query(`INSERT INTO imagen (ruta, fecha_subida, usuario_id, incidencia_id, comentario_id, solicitud_id, esta_eliminada)
             VALUES ($1, CURRENT_DATE, $2, $3, $4, $5, $6) RETURNING *`, 
-            [imagen.path, usuario_id, incidencia_id, comentario_id, solicitud_id, false]);
+            [imagen.filename, usuario_id, incidencia_id, comentario_id, solicitud_id, false]);
         // Comprobamos que se ha insertado correctamente
         if (imagenSubida.rows.length === 0) {
             throw new Error('Error al subir la imagen');

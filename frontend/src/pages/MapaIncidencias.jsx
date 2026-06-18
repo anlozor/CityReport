@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { getIncidencias } from "../services/incidenciasService";
+import { getIncidenciaId, getIncidencias } from "../services/incidenciasService";
 import TarjetaIncidencia from "../components/TarjetaIncidencia";
 import MapaLeaflet from "../components/MapaLeaflet";
 import { toast } from "react-toastify";
 import { sacarRoldelToken } from "../services/despiezarTokenService";
+import { crearComentario } from "../services/comentariosService";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
@@ -17,6 +18,8 @@ function MapaIncidencias() {
     const rol_id = sacarRoldelToken();
 
     const fileInputRef = useRef(null);
+
+    const [menuAbierto, setMenuAbierto] = useState(false);
 
     const actualizarVoto = (id_incidencia) => {
         setIncidencias(prev => prev.map(inc => inc.id_incidencia === id_incidencia ? {...inc, num_votos: Number(inc.num_votos) + 1} : inc));
@@ -33,6 +36,15 @@ function MapaIncidencias() {
             fileInputRef.current.value = null;
         }
     }, [incidenciaSeleccionada]);
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".menu-hamburguesa")) {
+                setMenuAbierto(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     const cargarIncidencias = async () => {
         try {
@@ -40,6 +52,34 @@ function MapaIncidencias() {
             setIncidencias(data);
         } catch (error) {
             console.error("ERROR", error);
+        }
+    };
+
+    const menuItemStyle = {
+        width: "100%",
+        padding: "10px",
+        border: "none",
+        background: "white",
+        textAlign: "left",
+        cursor: "pointer"
+    };
+
+    const handleCrearComentario = async () => {
+        try {
+            const {response, data} = await crearComentario(textoComentario, incidenciaSeleccionada.id_incidencia, esAnonimo, imagenComentario);
+
+            if (!response.ok) {
+                toast.error(data.mensaje);
+                return;
+            }
+
+            toast.success("Comentario publicado");
+
+            const incidenciaActualizada = await getIncidenciaId(incidenciaSeleccionada.id_incidencia);
+
+            setIncidenciaSeleccionada(incidenciaActualizada.data);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -54,6 +94,7 @@ function MapaIncidencias() {
             />
             
             {incidenciaSeleccionada && (
+                
                 <div
                     style={{
                         position: "absolute",
@@ -70,6 +111,7 @@ function MapaIncidencias() {
                         boxSizing: "border-box"
                     }}
                 >
+                    {console.log(incidenciaSeleccionada)}
                     <button
                         onClick={() => setIncidenciaSeleccionada(null)}
                         style={{
@@ -83,13 +125,13 @@ function MapaIncidencias() {
                         {incidenciaSeleccionada.categoria_nombre}
                     </p>
                     <p style={{lineHeight: "1.5"}}>{incidenciaSeleccionada.descripcion}</p>
+                    {console.log("IMAGEN:", incidenciaSeleccionada.imagenes[0])}
                     {incidenciaSeleccionada.imagenes?.length > 0 && (
                         <div style={{marginTop: "15px"}}>
                             {incidenciaSeleccionada.imagenes.map((img) => (
                                 <img
                                     key={img.id_imagen}
-                                    src={img.url}
-                                    alt="incidencia"
+                                    src={`http://localhost:3000/uploads/${img.ruta.split("/").pop()}`}
                                     style={{
                                         width: "100%",
                                         marginBottom: "10px",
@@ -102,6 +144,7 @@ function MapaIncidencias() {
                         value={textoComentario}
                         onChange={(e) => setTextoComentario(e.target.value)}
                         rows={4}
+                        placeholder="Escribe aquí tu comentario..."
                         style={{
                             width: "100%",
                             boxSizing: "border-box",
@@ -145,6 +188,7 @@ function MapaIncidencias() {
                         />
                     )}
                     <button
+                        onClick={handleCrearComentario}
                         style={{
                             marginTop: "15px",
                             width: "100%"
@@ -164,9 +208,30 @@ function MapaIncidencias() {
                         <h4>Comentarios</h4>
                         {incidenciaSeleccionada.comentarios?.length > 0 ? (
                             incidenciaSeleccionada.comentarios.map((c, i) => (
-                                <div key={i} style={{marginBlock: "10px"}}>
+                                <div
+                                    key={i}
+                                    style={{
+                                        marginBottom: "12px",
+                                        padding: "10px",
+                                        border: "1px solid #e0e0e0",
+                                        borderRadius: "10px",
+                                        backgroundColor: "#fafafa",
+                                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)"
+                                    }}
+                                >
                                     <strong>{c.autor}</strong>
                                     <p style={{margin: 0}}>{c.texto}</p>
+                                    {c.imagenesComentarios.map((img) => (
+                                        <img
+                                            key={img.id_imagen}
+                                            src={`http://localhost:3000/uploads/${img.ruta}`}
+                                            style={{
+                                                width: "100%",
+                                                marginTop: "10px",
+                                                borderRadius: "8px"
+                                            }}
+                                        />
+                                    ))}
                                     <small>{new Date(c.fecha_creacion).toLocaleString()}</small>
                                 </div>
                             ))
@@ -203,17 +268,62 @@ function MapaIncidencias() {
                 </div>
             )}
 
-            <button
-                onClick={() => setAbrirLista(!abrirLista)}
+            <div
+                className="menu-hamburguesa"
                 style={{
                     position: "absolute",
                     top: 20,
-                    right: 20,
-                    zIndex: 1000
+                    left: 20,
+                    zIndex: 4000
                 }}
             >
-                Lista
-            </button>
+                <button
+                    onClick={() => setMenuAbierto(prev => !prev)}
+                    style={{
+                        width: "45px",
+                        height: "45px",
+                        background: "white",
+                        border: "none",
+                        borderRadius: "10px",
+                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "4px"
+                    }}
+                >
+                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
+                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
+                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
+                </button>
+
+                {menuAbierto && (
+                    <div
+                        style={{
+                        position: "absolute",
+                        top: "55px",
+                        left: 0,
+                        width: "180px",
+                        background: "white",
+                        borderRadius: "10px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                        overflow: "hidden"
+                    }}
+                    >
+                        <button
+                            style={menuItemStyle}
+                            onClick={() => {
+                                setAbrirLista(true);
+                                setMenuAbierto(false);
+                            }}
+                        >
+                        Lista de incidencias
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

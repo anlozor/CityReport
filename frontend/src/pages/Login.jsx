@@ -75,9 +75,23 @@ function Login() {
 
                     <br/><br/>
 
-                    <button type="Submit">Entrar</button>
+                    <button type="Submit">Iniciar sesión</button>
                 </form>
-
+                <br/>
+                <button
+                    type="button"
+                    onClick={() => navigate("/registro")}
+                    style={{
+                        marginTop: "10px",
+                        background: "transparent",
+                        border: "none",
+                        color: "#3b82f6",
+                        cursor: "pointer",
+                        textDecoration: "underline"
+                    }}
+                >
+                    ¿No tienes cuenta? Pincha aquí y regístrate
+                </button>
                 <br/>
 
                 <p>{mensaje}</p>

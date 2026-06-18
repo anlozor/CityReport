@@ -103,13 +103,24 @@ router.post('/registro', async (req, res) => {
             }
         }
 
+        // Si no ha escrito alias, le asignamos uno por defecto
+        let aliasAsignado = alias;
+        if (!aliasAsignado || aliasAsignado.trim() === '') {
+            const ultimoUsuario = await pool.query(`SELECT alias FROM usuario WHERE alias LIKE 'usuario%' ORDER BY alias DESC LIMIT 1`);
+
+            let numero = ultimoUsuario.rows[0].alias.replace('usuario', '');
+            numero = parseInt(numero);
+            numero ++;
+            aliasAsignado = 'usuario' + String(numero).padStart(4, '0');
+        }
+
         // Hacemos el hash de la contraseña
         const contraseñaHashed = await bcrypt.hash(contraseña, 10);
     
         // Hacemos la inserción del nuevo usuario
         const result = await pool.query(`INSERT INTO usuario (nombre, email, contraseña, rol_id, alias, fecha_registro) 
             VALUES ($1, $2, $3, 3, $4, CURRENT_DATE)
-            RETURNING *`, [nombre, email, contraseñaHashed, alias]);
+            RETURNING *`, [nombre, email, contraseñaHashed, aliasAsignado]);
         // Devolvemos el estado HTTP y la información
         res.status(201).json(result.rows[0]);
     } catch (error) {

@@ -16,6 +16,7 @@ const pool = require('./bd/bd'); // Para poder conectar con la base de datos
 const auth = require('./middlewares/auth.middleware'); // Para usar el middleware de autenticación
 const rol = require('./middlewares/roles.middleware'); // Para usar el middleware de roles
 require('./cron/archivarCron'); // Para usar el cron de archivado de incidencias
+const path = require("path"); // Para guardar bien la ruta de las imágenes
 
 // Cargamos routers
 const votosRouter = require("./routes/votos.router");
@@ -35,6 +36,7 @@ const app = express();
 // 3. Middlewares
 app.use(express.json()); // Permitimos recibir datos en formato JSON
 app.use(cors()); // Permitimos hacer peticiones desde el frontend
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"))); // Guardamos las imágenes como http://localhost... para poder acceder a ellas en frontend
 
 app.use('/votos', votosRouter);
 app.use('/usuarios',usuariosRouter);
