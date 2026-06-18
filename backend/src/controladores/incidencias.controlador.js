@@ -194,7 +194,7 @@ const getIncidenciaId = async (req, res) => {
                 mensaje: 'Incidencia no encontrada'});
         }
         // La de comentarios
-        const comentarios = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
+        const comentarios = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, usuario.rol_id, 
             CASE 
                 WHEN usuario.identificador_gestor IS NOT NULL THEN usuario.identificador_gestor
                 WHEN comentario.es_anonimo = true THEN usuario.alias ELSE usuario.nombre 
@@ -211,7 +211,8 @@ const getIncidenciaId = async (req, res) => {
 
             comentariosConImagenes.push({
                 ...comentario,
-                imagenesComentarios: imagenesComentarios.rows
+                imagenesComentarios: imagenesComentarios.rows,
+                es_gestor: comentario.rol_id === 1 || comentario.rol_id === 2
             });
         }
 

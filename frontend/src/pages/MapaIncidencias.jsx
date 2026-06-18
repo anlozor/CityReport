@@ -213,9 +213,11 @@ function MapaIncidencias() {
                                     style={{
                                         marginBottom: "12px",
                                         padding: "10px",
-                                        border: "1px solid #e0e0e0",
                                         borderRadius: "10px",
-                                        backgroundColor: "#fafafa",
+
+                                        backgroundColor: c.es_gestor ? "#ffe082" : "#fafafa",
+                                        border: c.es_gestor ? "2px solid #ff9800" : "1px solid #e0e0e0",
+
                                         boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)"
                                     }}
                                 >
