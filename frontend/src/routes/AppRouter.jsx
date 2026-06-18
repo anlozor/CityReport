@@ -5,6 +5,7 @@ import Login from "../pages/Login";
 import MapaIncidencias from "../pages/MapaIncidencias";
 import InfoIncidencia from "../pages/InfoIncidencia";
 import NuevaIncidencia from "../pages/NuevaIncidencia";
+import RegistroNuevoUsuario from "../pages/RegistroNuevoUsuario";
 
 function AppRouter(){
     return (
@@ -25,6 +26,10 @@ function AppRouter(){
                 <Route
                     path="/incidencias/nueva"
                     element={<NuevaIncidencia/>}
+                />
+                <Route
+                    path="/registro"
+                    element={<RegistroNuevoUsuario/>}
                 />
                 
             </Routes>

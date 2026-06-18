@@ -121,8 +121,15 @@ router.post('/registro', async (req, res) => {
         const result = await pool.query(`INSERT INTO usuario (nombre, email, contraseña, rol_id, alias, fecha_registro) 
             VALUES ($1, $2, $3, 3, $4, CURRENT_DATE)
             RETURNING *`, [nombre, email, contraseñaHashed, aliasAsignado]);
+        
+        // Creamos el token del usuario para que pueda navegar por la app
+        const token = jwt.sign({
+            id_usuario: result.rows[0].id_usuario,
+            rol_id: result.rows[0].rol_id,
+            idGestor: null
+        }, process.env.JWT_SECRET, {expiresIn: '1h'});
         // Devolvemos el estado HTTP y la información
-        res.status(201).json(result.rows[0]);
+        res.status(201).json({token});
     } catch (error) {
         console.error('Error creando usuario:', error);
         res.status(500).json({

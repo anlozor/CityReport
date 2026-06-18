@@ -53,7 +53,18 @@ function Login() {
                 width: "100vw"
             }}
         >
-            <div>
+            <div
+                style={{
+                    width: "320px",
+                    padding: "20px",
+                    background: "white",
+                    borderRadius: "10px",
+                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center"
+                }}
+            >
                 <h1>Login</h1>
 
                 <form onSubmit={handleSubmit}>

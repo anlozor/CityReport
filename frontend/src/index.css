@@ -105,3 +105,14 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+@keyframes shake {
+  0% {transform: translateX(0);}
+  25% {transform: translateX(-4px);}
+  50% {transform: translateX(4px);}
+  75% {transform: translateX(-4px);}
+  100% {transform: translateX(0);}
+}
+.shake {
+  animation: shake 0.3s ease;
+}
