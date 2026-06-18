@@ -35,8 +35,12 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
 router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         const id = req.usuario.id_usuario;
-        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, usuario.alias, rol.nombre AS rol
+        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, usuario.alias, rol.nombre AS rol,
+            (SELECT COUNT(*) FROM incidencia WHERE usuario_id = $1) AS num_incidencias,
+            (SELECT COUNT(*) FROM comentario WHERE usuario_id = $1) AS num_comentarios
             FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
+
+        console.log("PERFIL:", result.rows[0]);
         res.status(200).json(result.rows[0]);
         
     } catch (error) {
@@ -421,9 +425,9 @@ router.post('/login', async (req, res) => {
 });
 
 // PATCH -> actualizar datos de usuario
-router.patch('/:id', auth, usuarioNoBloqueado, async (req, res) => {
+router.patch('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
     try {
-        const id = req.params.id; // Leemos el id
+        const id = req.usuario.id_usuario; // Leemos el id
         // Buscamos al usuario en la bd para comprobar que existe
         const existe = await pool.query(`SELECT * FROM usuario WHERE id_usuario = $1`, [id]);
         // Comprobamos que existe el usuario

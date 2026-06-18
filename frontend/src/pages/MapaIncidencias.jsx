@@ -5,6 +5,7 @@ import MapaLeaflet from "../components/MapaLeaflet";
 import { toast } from "react-toastify";
 import { sacarRoldelToken } from "../services/despiezarTokenService";
 import { crearComentario } from "../services/comentariosService";
+import PerfilUsuario from "../components/PerfilUsuario";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
@@ -20,6 +21,8 @@ function MapaIncidencias() {
     const fileInputRef = useRef(null);
 
     const [menuAbierto, setMenuAbierto] = useState(false);
+
+    const [vista, setVista] = useState("mapa");
 
     const actualizarVoto = (id_incidencia) => {
         setIncidencias(prev => prev.map(inc => inc.id_incidencia === id_incidencia ? {...inc, num_votos: Number(inc.num_votos) + 1} : inc));
@@ -87,11 +90,16 @@ function MapaIncidencias() {
         <div
             style={{height: "100vh", width: "100vw", position: "relative"}}
         >
-            <MapaLeaflet 
-                incidencias={incidencias}
-                onVerDetalles={setIncidenciaSeleccionada}
-                onActualizarVoto ={actualizarVoto}
-            />
+            {vista === "mapa" && (
+                <MapaLeaflet 
+                    incidencias={incidencias}
+                    onVerDetalles={setIncidenciaSeleccionada}
+                    onActualizarVoto ={actualizarVoto}
+                />
+            )}
+            {vista === "perfil" && (
+                <PerfilUsuario/>
+            )}
             
             {incidenciaSeleccionada && (
                 
@@ -314,6 +322,17 @@ function MapaIncidencias() {
                         overflow: "hidden"
                     }}
                     >
+                        <button
+                            style={menuItemStyle}
+                            onClick={() => {
+                                setMenuAbierto(false);
+                                setVista("perfil");
+                                setIncidenciaSeleccionada(null);
+                                setAbrirLista(false);
+                            }}
+                        >
+                            Mi perfil
+                        </button>
                         <button
                             style={menuItemStyle}
                             onClick={() => {
