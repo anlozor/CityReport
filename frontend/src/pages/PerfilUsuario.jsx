@@ -17,7 +17,6 @@ function PerfilUsuario() {
 
     const cargarPerfil = async () => {
         const {data} = await getMiPerfil();
-        console.log("PERFIL:", data);
 
         setPerfil(data);
         setForm({
@@ -48,6 +47,8 @@ function PerfilUsuario() {
         return <p>Cargando perfil...</p>;
     }
 
+    const iniciales = perfil?.nombre ? perfil.nombre.split(" ").map(p => p[0]).join("").toUpperCase() : "";
+
     return (
         <div
             style={{
@@ -68,24 +69,51 @@ function PerfilUsuario() {
                     boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)"
                 }}
             >
-                <h2 style={{marginBottom: "5px"}}>{perfil.nombre}</h2>
-                <p
+                <div
                     style={{
-                        color: "#666",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        textAlign: "center",
                         marginBottom: "15px"
                     }}
                 >
-                    {perfil.rol} · {perfil.alias}
-                </p>
+                    <div
+                        style={{
+                            width: "80px",
+                            height: "80px",
+                            borderRadius: "50%",
+                            background: "#ff7a00",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            color: "white",
+                            fontWeight: "bold",
+                            fontSize: "28px",
+                            marginBottom: "15px"
+                        }}
+                    >
+                        {iniciales}
+                    </div>
+                    <h2 style={{marginBottom: "5px"}}>{perfil.nombre}</h2>
+                    <p
+                        style={{
+                            color: "#666",
+                            marginBottom: "15px"
+                        }}
+                    >
+                        {perfil.rol} · {perfil.alias}
+                    </p>
 
-                <p
-                    style={{
-                        fontSize: "0.9rem",
-                        color: "#888"
-                    }}
-                >
-                    Registrad@ desde {new Date(perfil.fecha_registro).toLocaleDateString()}
-                </p>
+                    <p
+                        style={{
+                            fontSize: "0.9rem",
+                            color: "#888"
+                        }}
+                    >
+                        Registrad@ desde {new Date(perfil.fecha_registro).toLocaleDateString()}
+                    </p>
+                </div>
                 <div
                     style={{
                         display: "flex",

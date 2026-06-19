@@ -35,12 +35,15 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
 router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         const id = req.usuario.id_usuario;
-        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, usuario.alias, rol.nombre AS rol,
+        const result = await pool.query(`SELECT usuario.nombre, usuario.email, usuario.fecha_registro, rol.nombre AS rol,
+            CASE
+                WHEN usuario.rol_id IN (1, 2) THEN usuario.identificador_gestor
+                ELSE usuario.alias
+            END AS alias,
             (SELECT COUNT(*) FROM incidencia WHERE usuario_id = $1) AS num_incidencias,
             (SELECT COUNT(*) FROM comentario WHERE usuario_id = $1) AS num_comentarios
             FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
 
-        console.log("PERFIL:", result.rows[0]);
         res.status(200).json(result.rows[0]);
         
     } catch (error) {

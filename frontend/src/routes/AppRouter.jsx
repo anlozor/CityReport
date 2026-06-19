@@ -6,32 +6,40 @@ import MapaIncidencias from "../pages/MapaIncidencias";
 import InfoIncidencia from "../pages/InfoIncidencia";
 import NuevaIncidencia from "../pages/NuevaIncidencia";
 import RegistroNuevoUsuario from "../pages/RegistroNuevoUsuario";
+import MenuHamburguesa from "../layouts/MenuHamburguesa";
+import PerfilUsuario from "../pages/PerfilUsuario";
 
 function AppRouter(){
     return (
         <BrowserRouter>
             <Routes>
+                <Route element={<MenuHamburguesa/>}>
+                    <Route
+                        path="/mapa"
+                        element={<MapaIncidencias />}
+                    />
+                    <Route
+                        path="/incidencias/:id"
+                        element={<InfoIncidencia />}
+                    />
+                    <Route
+                        path="/incidencias/nueva"
+                        element={<NuevaIncidencia/>}
+                    />
+                    <Route
+                        path="/perfil"
+                        element={<PerfilUsuario/>}
+                    />
+                </Route>
                 <Route
-                    path="/"
+                    path="/login"
                     element={<Login />}
-                />
-                <Route
-                    path="/mapa"
-                    element={<MapaIncidencias />}
-                />
-                <Route
-                    path="/incidencias/:id"
-                    element={<InfoIncidencia />}
-                />
-                <Route
-                    path="/incidencias/nueva"
-                    element={<NuevaIncidencia/>}
                 />
                 <Route
                     path="/registro"
                     element={<RegistroNuevoUsuario/>}
                 />
-                
+
             </Routes>
         </BrowserRouter>
     );

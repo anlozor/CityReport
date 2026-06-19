@@ -5,11 +5,10 @@ import MapaLeaflet from "../components/MapaLeaflet";
 import { toast } from "react-toastify";
 import { sacarRoldelToken } from "../services/despiezarTokenService";
 import { crearComentario } from "../services/comentariosService";
-import PerfilUsuario from "../components/PerfilUsuario";
+import PerfilUsuario from "./PerfilUsuario";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
-    const [abrirLista, setAbrirLista] = useState(false);
     const [incidenciaSeleccionada, setIncidenciaSeleccionada] = useState(null);
 
     const [textoComentario, setTextoComentario] = useState("");
@@ -251,100 +250,7 @@ function MapaIncidencias() {
                     </div>
                 </div>
             )}
-            {abrirLista && (
-                <div
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "350px",
-                        height: "100%",
-                        background: "white",
-                        overflowY: "auto",
-                        zIndex: 100
-                    }}
-                >
-                    <h3>Incidencias</h3>
 
-                    <ul>
-                        {incidencias.map((inc) => (
-                            <TarjetaIncidencia
-                                key={inc.id_incidencia}
-                                incidencia={inc}
-                            />
-                        ))}
-                    </ul>
-
-                </div>
-            )}
-
-            <div
-                className="menu-hamburguesa"
-                style={{
-                    position: "absolute",
-                    top: 20,
-                    left: 20,
-                    zIndex: 4000
-                }}
-            >
-                <button
-                    onClick={() => setMenuAbierto(prev => !prev)}
-                    style={{
-                        width: "45px",
-                        height: "45px",
-                        background: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: "4px"
-                    }}
-                >
-                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
-                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
-                    <div style={{ width: "20px", height: "2px", background: "#333" }} />
-                </button>
-
-                {menuAbierto && (
-                    <div
-                        style={{
-                        position: "absolute",
-                        top: "55px",
-                        left: 0,
-                        width: "180px",
-                        background: "white",
-                        borderRadius: "10px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                        overflow: "hidden"
-                    }}
-                    >
-                        <button
-                            style={menuItemStyle}
-                            onClick={() => {
-                                setMenuAbierto(false);
-                                setVista("perfil");
-                                setIncidenciaSeleccionada(null);
-                                setAbrirLista(false);
-                            }}
-                        >
-                            Mi perfil
-                        </button>
-                        <button
-                            style={menuItemStyle}
-                            onClick={() => {
-                                setAbrirLista(true);
-                                setMenuAbierto(false);
-                            }}
-                        >
-                        Lista de incidencias
-                        </button>
-                    </div>
-                )}
-            </div>
         </div>
     );
 }
