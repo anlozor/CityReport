@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 
-function NuevaIncidencia() {
-    const location = useLocation();
-
+function NuevaIncidencia({latitud, longitud, direccion}) {
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
-    const [direccion_texto, setDireccionTexto] = useState(location.state?.direccion_texto || "");
-    const [lat, setLat] = useState(location.state?.lat || null);
-    const [lon, setLon] = useState(location.state?.lon || null);
+
+    const [direccion_texto, setDireccionTexto] = useState(direccion || "");
+    const lat = latitud;
+    const lon = longitud;
+
     const [categoria, setCategoria] = useState("");
     const [categorias, setCategorias] = useState([]);
 
@@ -115,79 +114,137 @@ function NuevaIncidencia() {
         }
     };
 
+    const inputStyle = {
+        width: "100%",
+        padding: "8px 10px",
+        marginBottom: "10px",
+        borderRadius: "8px",
+        border: "1px solid #ddd",
+        outline: "none",
+        fontSize: "13px"
+    };
+
     return (
-        <>
-            <h1>Nueva incidencia</h1>
+        <div
+            style={{
+                width: "260px",
+                margin: "0 auto",
+                textAlign: "center"
+            }}
+        >
+            <h2
+                style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "18px",
+                    textAlign: "center"
+                }}
+            >
+                Nueva incidencia
+            </h2>
             <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Título"
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                />
-                <br/>
-                <textarea
-                    placeholder="Descripción"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                />
-                <br/>
-
-                <select
-                    value={categoria}
-                    onChange={(e) => setCategoria(e.target.value)}
+                <div className="campo">
+                    <input
+                        type="text"
+                        placeholder="Título"
+                        value={titulo}
+                        onChange={(e) => setTitulo(e.target.value)}
+                        style={inputStyle}
+                    />
+                </div>
+                <div className="campo">
+                    <textarea
+                        placeholder="Descripción"
+                        value={descripcion}
+                        onChange={(e) => setDescripcion(e.target.value)}
+                        style={inputStyle}
+                    />
+                </div>
+                <div className="campo">
+                    <select
+                        value={categoria}
+                        onChange={(e) => setCategoria(e.target.value)}
+                        style={inputStyle}
+                    >
+                        <option value="">Selecciona una categoría</option>
+                        {categorias.map((categoria) => (
+                            <option
+                                key={categoria.id_categoria}
+                                value={categoria.nombre}
+                            >
+                                {categoria.nombre}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div
+                    style={{
+                        fontSize: "12px",
+                        padding: "8px",
+                        marginBottom: "10px",
+                        background: "#f5f5f5",
+                        borderRadius: "8px",
+                        color: "#444"
+                    }}
                 >
-                    <option value="">Selecciona una categoría</option>
-                    {categorias.map((categoria) => (
-                        <option
-                            key={categoria.id_categoria}
-                            value={categoria.nombre}
-                        >
-                            {categoria.nombre}
-                        </option>
-                    ))}
-                </select>
-
-                <br/>
-
-                <input
-                    type="text"
-                    placeholder="Dirección"
-                    value={direccion_texto}
-                    onChange={(e) => setDireccionTexto(e.target.value)}
-                />
-
-                <br/>
-
-                <h3>Imagen 1</h3>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImagen1(e.target.files[0])}
-                />
-                {imagen1 && (
-                    <img
-                        src={URL.createObjectURL(imagen1)}
-                        alt="preview1"
-                        width="200"
+                    {direccion_texto}
+                </div>
+                <div className="campo">
+                    <h3>Imagen 1</h3>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImagen1(e.target.files[0])}
+                        style={inputStyle}
                     />
-                )}
-                <br/>
-                <h3>Imagen 2</h3>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImagen2(e.target.files[0])}
-                />
-                {imagen2 && (
-                    <img
-                        src={URL.createObjectURL(imagen2)}
-                        alt="preview2"
-                        width="200"
+                    {imagen1 && (
+                        <img
+                            src={URL.createObjectURL(imagen1)}
+                            alt="preview1"
+                            style={{
+                                width: "100%",
+                                maxHeight: "100px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                                marginTop: "6px"
+                            }}
+                        />
+                    )}
+                </div>
+                <div className="campo">
+                    <h3>Imagen 2</h3>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImagen2(e.target.files[0])}
+                        style={inputStyle}
                     />
-                )}
-                <br/>
-                <button type="submit" disabled={loading}>
+                    {imagen2 && (
+                        <img
+                            src={URL.createObjectURL(imagen2)}
+                            alt="preview2"
+                            style={{
+                                width: "100%",
+                                maxHeight: "100px",
+                                objectFit: "cover",
+                                borderRadius: "8px",
+                                marginTop: "6px"
+                            }}
+                        />
+                    )}
+                </div>
+                <button 
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                        width: "100%",
+                        padding: "10px",
+                        background: "#ff9800",
+                        color: "black",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer"
+                    }}
+                >
                     {loading ? "Creando incidencia" : "Crear incidencia"}
                 </button>
             </form>
@@ -198,7 +255,7 @@ function NuevaIncidencia() {
             {exito && (
                 <p style={{color: "green"}}>{exito}</p>
             )}
-        </>
+        </div>
     );
 }
 

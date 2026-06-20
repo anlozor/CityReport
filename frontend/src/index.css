@@ -116,3 +116,16 @@ code {
 .shake {
   animation: shake 0.3s ease;
 }
+
+.leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    display: flex;
+    justify-content: center;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    width: auto !important;
+    display: flex;
+    justify-content: center;
+}

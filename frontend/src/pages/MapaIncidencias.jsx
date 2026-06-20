@@ -6,10 +6,12 @@ import { toast } from "react-toastify";
 import { sacarRoldelToken } from "../services/despiezarTokenService";
 import { crearComentario } from "../services/comentariosService";
 import PerfilUsuario from "./PerfilUsuario";
+import { data } from "react-router-dom";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
     const [incidenciaSeleccionada, setIncidenciaSeleccionada] = useState(null);
+    const [nuevaIncidencia, setNuevaIncidencia] = useState(null);
 
     const [textoComentario, setTextoComentario] = useState("");
     const [esAnonimo, setEsAnonimo] = useState(false);
@@ -25,6 +27,16 @@ function MapaIncidencias() {
 
     const actualizarVoto = (id_incidencia) => {
         setIncidencias(prev => prev.map(inc => inc.id_incidencia === id_incidencia ? {...inc, num_votos: Number(inc.num_votos) + 1} : inc));
+    };
+
+    const handleNuevaIncidencia = (datos) => {
+        setIncidenciaSeleccionada(null);
+        setNuevaIncidencia(datos);
+    };
+
+    const handleVerDetalles = (incidencia) => {
+        setNuevaIncidencia(null);
+        setIncidenciaSeleccionada(incidencia);
     };
 
     // Cada vez que se carga, se cargan las incidencias y se resetean los campos
@@ -92,8 +104,11 @@ function MapaIncidencias() {
             {vista === "mapa" && (
                 <MapaLeaflet 
                     incidencias={incidencias}
-                    onVerDetalles={setIncidenciaSeleccionada}
-                    onActualizarVoto ={actualizarVoto}
+                    onVerDetalles={handleVerDetalles}
+                    onActualizarVoto={actualizarVoto}
+                    onNuevaIncidencia={handleNuevaIncidencia}
+                    nuevaIncidencia={nuevaIncidencia}
+                    setNuevaIncidencia={setNuevaIncidencia}
                 />
             )}
             {vista === "perfil" && (

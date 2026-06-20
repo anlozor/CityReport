@@ -3,10 +3,12 @@ import '../utils/iconosLeaflet';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { votarIncidencia } from '../services/votosService';
-import { useSVGOverlay } from 'react-leaflet/SVGOverlay';
-import { useAsyncError } from 'react-router-dom';
 import { sacarUsuariodelToken } from '../services/despiezarTokenService';
 import { getIncidenciaId } from '../services/incidenciasService';
+import { L } from 'leaflet';
+import { useMapEvents } from "react-leaflet";
+import { obtenerDireccion } from '../services/nominatimService';
+import NuevaIncidencia from '../pages/NuevaIncidencia';
 
 function FixMapSize({incidencias}) {
     const map = useMap();
@@ -17,11 +19,30 @@ function FixMapSize({incidencias}) {
     return null;
 }
 
-export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto}) {
+function HandlerClickMapa({setPosicionNueva, setNuevaIncidencia}) {
+    useMapEvents({
+        click: async (e) => {
+            const {lat, lng} = e.latlng;
+            let direccion = "";
+            try {
+                direccion = await obtenerDireccion(lat, lng);
+            } catch (error) {
+                console.error("Error obteniendo dirección:", error);
+            }
+
+            setPosicionNueva({lat, lng, direccion: direccion});
+        }
+    });
+    return null;
+}
+
+export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia}) {
     const madrid = [40.4168, -3.7038];
     const id_usuario = sacarUsuariodelToken();
 
     const [votosUsuario, setVotosUsuario] = useState([]);
+
+    const [posicionNueva, setPosicionNueva] = useState(null);
 
     const handleVotar = async (id_incidencia) => {
         try {
@@ -60,6 +81,7 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
         }
     };
 
+
     return (
         <MapContainer
             center={madrid}
@@ -71,6 +93,11 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FixMapSize incidencias={incidencias}/>
+
+            <HandlerClickMapa
+                setPosicionNueva={setPosicionNueva}
+                setNuevaIncidencia={setNuevaIncidencia}
+            />
 
             {Array.isArray(incidencias) && incidencias.map((inc) => (
                 <Marker
@@ -98,6 +125,40 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                     </Popup>
                 </Marker>
             ))}
+            {posicionNueva && (
+                <div
+                    style={{
+                        width: "100%",
+                        padding: "10px",
+                        boxSizing: "border-box",
+                        textAlign: "center"
+                    }}
+                >
+                    <Popup
+                        key={posicionNueva.lat + "," + posicionNueva.lng}
+                        position={[posicionNueva.lat, posicionNueva.lng]}
+                        onClose={() => setPosicionNueva(null)}
+                    >
+                        <div
+                            style={{
+                                width: "380px",
+                                maxWidth: "85vw",
+                                padding: "10px",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                textAlign: "center"
+                            }}
+                        >
+                            <NuevaIncidencia
+                                latitud={posicionNueva.lat}
+                                longitud={posicionNueva.lng}
+                                direccion={posicionNueva.direccion}
+                            />
+                        </div>
+                    </Popup>
+                </div>
+            )}
         </MapContainer>
     );
 }
