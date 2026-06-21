@@ -39,6 +39,12 @@ function MapaIncidencias() {
         setIncidenciaSeleccionada(incidencia);
     };
 
+    const handleIncidenciaCreada = () => {
+        cargarIncidencias();
+        setNuevaIncidencia(null);
+        setIncidenciaSeleccionada(null);
+    };
+
     // Cada vez que se carga, se cargan las incidencias y se resetean los campos
     useEffect(() => { cargarIncidencias();}, []);
     useEffect(() => {
@@ -109,6 +115,7 @@ function MapaIncidencias() {
                     onNuevaIncidencia={handleNuevaIncidencia}
                     nuevaIncidencia={nuevaIncidencia}
                     setNuevaIncidencia={setNuevaIncidencia}
+                    onIncidenciaCreada={handleIncidenciaCreada}
                 />
             )}
             {vista === "perfil" && (

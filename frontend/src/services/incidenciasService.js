@@ -28,3 +28,17 @@ export async function getIncidenciaId(id) {
 
     return {response, data};
 }
+
+export async function postNuevaIncidencia(datos) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3000/incidencias", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`},
+        body: datos
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}

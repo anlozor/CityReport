@@ -8,6 +8,7 @@ import NuevaIncidencia from "../pages/NuevaIncidencia";
 import RegistroNuevoUsuario from "../pages/RegistroNuevoUsuario";
 import MenuHamburguesa from "../layouts/MenuHamburguesa";
 import PerfilUsuario from "../pages/PerfilUsuario";
+import RecuperarContraseña from "../pages/RecuperarContraseña";
 
 function AppRouter(){
     return (
@@ -32,12 +33,16 @@ function AppRouter(){
                     />
                 </Route>
                 <Route
-                    path="/login"
+                    path="/"
                     element={<Login />}
                 />
                 <Route
                     path="/registro"
                     element={<RegistroNuevoUsuario/>}
+                />
+                <Route
+                    path="/recuperar-contrasena"
+                    element={<RecuperarContraseña/>}
                 />
 
             </Routes>

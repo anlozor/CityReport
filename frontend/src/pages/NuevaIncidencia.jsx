@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { postNuevaIncidencia } from "../services/incidenciasService";
+import { toast } from "react-toastify";
 
-function NuevaIncidencia({latitud, longitud, direccion}) {
+function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
 
@@ -45,15 +47,6 @@ function NuevaIncidencia({latitud, longitud, direccion}) {
         setError("");
         setExito("");
 
-        console.log({
-    titulo,
-    descripcion,
-    direccion_texto,
-    categoria,
-    lat,
-    lon
-});
-
         if (!titulo || !descripcion || !direccion_texto || !categoria || lat === null || lon === null) {
             setError("Debes rellenar todos los campos");
             return;
@@ -62,8 +55,6 @@ function NuevaIncidencia({latitud, longitud, direccion}) {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem("token");
-
             const formData = new FormData(); // Para subir archivos, imágenes en este caso
 
             formData.append("titulo", titulo);
@@ -80,23 +71,19 @@ function NuevaIncidencia({latitud, longitud, direccion}) {
                 formData.append("imagenes", imagen2);
             }
 
-            const response = await fetch("http://localhost:3000/incidencias", {
-                method: "POST",
-                headers: {Authorization: `Bearer ${token}`,},
-                body: formData,
-            });
-
-            const data = await response.json();
+            const {response, data} = await postNuevaIncidencia(formData);
 
             if (response.ok) {
-                setExito(data.mensaje);
+                toast.success("Incidencia creada correctamente");
+
+                if (onIncidenciaCreada) {
+                    onIncidenciaCreada();
+                }
 
                 setTitulo("");
                 setDescripcion("");
                 setDireccionTexto("");
                 setCategoria("");
-                setLat(null);
-                setLon(null);
                 setImagen1(null);
                 setImagen2(null);
             } else {

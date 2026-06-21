@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/loginService";
+import { Link } from "react-router-dom";
 
 function Login() {
     // useState se usa para datos que cambian, como un contador que cambia según los botones que pulses
@@ -86,9 +87,23 @@ function Login() {
 
                     <br/><br/>
 
-                    <button type="Submit">Iniciar sesión</button>
+                    <button type="Submit" style={{background: "orange"}}>Iniciar sesión</button>
                 </form>
                 <br/>
+                <button
+                    type="button"
+                    onClick={() => navigate("/recuperar-contrasena")}
+                    style={{
+                        marginTop: "10px",
+                        background: "transparent",
+                        border: "none",
+                        color: "#3b82f6",
+                        cursor: "pointer",
+                        textDecoration: "underline"
+                    }}
+                >
+                    ¿Has olvidado tu contraseña?
+                </button>
                 <button
                     type="button"
                     onClick={() => navigate("/registro")}

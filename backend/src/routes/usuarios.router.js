@@ -288,7 +288,7 @@ router.patch('/verificar-activacion', async (req, res) => {
 
 // PATCH -> activar cuenta de gestor nueva --> solo gestores
 // Para establecer la contraseña del nuevo gestor
-router.patch('/restablecer-contraseña', authActivacion, usuarioNoBloqueado, async (req, res) => {
+router.patch('/restablecer-contrasena', authActivacion, usuarioNoBloqueado, async (req, res) => {
     try {
         // Leemos del token temporal el id_usuario
         const id_usuario = req.usuario.id_usuario;
@@ -330,7 +330,7 @@ router.patch('/restablecer-contraseña', authActivacion, usuarioNoBloqueado, asy
 
 // PATCH -> contraseña olvidada
 // Para enviar un mail al usuario con un link para cambiar la contraseña
-router.patch('/contraseña-olvidada', async (req, res) => {
+router.patch('/contrasena-olvidada', async (req, res) => {
     try {
         // Leemos del body el email
         const {email} = req.body;
@@ -355,7 +355,7 @@ router.patch('/contraseña-olvidada', async (req, res) => {
             }, process.env.JWT_SECRET,
             {expiresIn: '15m'});
             // Enviamos mail con link
-            const enlace = `http://localhost:3000/usuarios/restablecer-contraseña?token=${token}`;
+            const enlace = `http://localhost:3000/usuarios/restablecer-contrasena?token=${token}`;
             await enviarRecuperacion(email, enlace);
 
         }

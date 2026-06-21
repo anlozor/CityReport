@@ -36,7 +36,7 @@ function HandlerClickMapa({setPosicionNueva, setNuevaIncidencia}) {
     return null;
 }
 
-export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia}) {
+export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia, onIncidenciaCreada}) {
     const madrid = [40.4168, -3.7038];
     const id_usuario = sacarUsuariodelToken();
 
@@ -154,6 +154,11 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                                 latitud={posicionNueva.lat}
                                 longitud={posicionNueva.lng}
                                 direccion={posicionNueva.direccion}
+                                onIncidenciaCreada={() => { setPosicionNueva(null);
+                                    if (onIncidenciaCreada) {
+                                        onIncidenciaCreada();
+                                    }
+                                }}
                             />
                         </div>
                     </Popup>

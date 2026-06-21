@@ -250,9 +250,9 @@ const postNuevaIncidencia = async (req, res) => {
         } else if (descripcion.length > 250) {
             return res.status(400).json({
                 mensaje: 'La descripción supera el límite, no debe sobrepasar los 250 caracteres'});
-        } else if (direccion_texto.length > 100) {
+        } else if (direccion_texto.length > 500) {
             return res.status(400).json({
-                mensaje: 'La dirección supera el límite, no debe sobrepasar los 100 caracteres'});
+                mensaje: 'La dirección supera el límite, no debe sobrepasar los 500 caracteres'});
         }
 
         // Comprobamos que el titulo y la descripción no contienen palabras ofensivas
@@ -302,8 +302,8 @@ const postNuevaIncidencia = async (req, res) => {
 
         // Realizamos la query de la incidencia
         const nuevaIncidencia = await pool.query(`INSERT INTO incidencia (titulo, descripcion, fecha_creacion, ubicacion, 
-            direccion_texto, categoria_nombre, estado_nombre, usuario_id, prioridad, validada, esta_eliminada)
-            VALUES ($1, $2, CURRENT_DATE, ST_MakePoint($3, $4)::geography, $5, $6, $7, $8, $9, false, false)
+            direccion_texto, categoria_nombre, estado_nombre, usuario_id, prioridad, esta_eliminada)
+            VALUES ($1, $2, CURRENT_DATE, ST_MakePoint($3, $4)::geography, $5, $6, $7, $8, $9, false)
             RETURNING *`, 
             [titulo, descripcion, longitud, latitud, direccion_texto, categoria, estado, usuario_id, prioridad]);
 
