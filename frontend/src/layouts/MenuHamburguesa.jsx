@@ -96,7 +96,7 @@ function MenuHamburguesa({children}) {
                             style={menuItemStyle}
                             onClick={() => {
                                 localStorage.removeItem("token");
-                                navigate("/login");
+                                navigate("/");
                             }}
                         >
                             Cerrar sesión

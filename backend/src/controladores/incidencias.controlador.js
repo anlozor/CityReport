@@ -49,10 +49,14 @@ const getIncidencias = async (req, res) => {
         }
 
         // Si recibimos fecha, ordenamos por fecha de creación,
-        // de manera ascendente o descendente dependiendo del valor de fecha
+        // de manera descendente dependiendo del valor de fecha (0 (todas), 7 días, 30 o 90)
         if (fecha) {
-            const ordenFecha = fecha === 'reciente' ? 'incidencia.fecha_creacion DESC' : 'incidencia.fecha_creacion ASC';
-            order.push(ordenFecha);
+            if (fecha !== '0') {
+                const fechaIndice = values.length + 1;
+                where.push(`incidencia.fecha_creacion >= NOW() - ($${fechaIndice} * INTERVAL '1 day')`);
+                values.push(Number(fecha));
+            }
+            order.push('incidencia.fecha_creacion DESC');
         }
 
         // Si recibimos votos = true, ordenamos de manera descendente por numero de votos

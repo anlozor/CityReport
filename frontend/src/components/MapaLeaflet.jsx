@@ -36,8 +36,22 @@ function HandlerClickMapa({setPosicionNueva, setNuevaIncidencia}) {
     return null;
 }
 
-export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia, onIncidenciaCreada}) {
-    const madrid = [40.4168, -3.7038];
+function CentrarMapa({ubicacionUsuario}) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!ubicacionUsuario) {
+            return;
+        }
+
+        map.setView([ubicacionUsuario.lat, ubicacionUsuario.lon], map.getZoom());
+    }, [ubicacionUsuario]);
+
+    return null;
+}
+
+export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia, onIncidenciaCreada, ubicacionUsuario}) {
+    const centro = ubicacionUsuario ? [ubicacionUsuario.lat, ubicacionUsuario.lon] : [40.4168, -3.7038];
     const id_usuario = sacarUsuariodelToken();
 
     const [votosUsuario, setVotosUsuario] = useState([]);
@@ -84,7 +98,7 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
 
     return (
         <MapContainer
-            center={madrid}
+            center={centro}
             zoom={13}
             style={{height: '100vh', width: '100%'}}
         >
@@ -93,6 +107,9 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FixMapSize incidencias={incidencias}/>
+            <CentrarMapa
+                ubicacionUsuario={ubicacionUsuario}
+            />
 
             <HandlerClickMapa
                 setPosicionNueva={setPosicionNueva}

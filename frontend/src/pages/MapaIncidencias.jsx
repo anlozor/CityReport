@@ -7,6 +7,8 @@ import { sacarRoldelToken } from "../services/despiezarTokenService";
 import { crearComentario } from "../services/comentariosService";
 import PerfilUsuario from "./PerfilUsuario";
 import { data } from "react-router-dom";
+import PanelFiltros from "../components/PanelFiltros";
+import {FiFilter} from "react-icons/fi";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
@@ -25,6 +27,19 @@ function MapaIncidencias() {
 
     const [vista, setVista] = useState("mapa");
 
+    const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
+    const [filtros, setFiltros] = useState({
+        votos: "false",
+        historicas: "false",
+        fecha: "0",
+        estado: [],
+        proximidad: 500,
+        proximidadIndice: 0,
+        proximidadActivada: false,
+        propias: "false"
+    });
+    const [ubicacionUsuario, setUbicacionUsuario] = useState(null);
+
     const actualizarVoto = (id_incidencia) => {
         setIncidencias(prev => prev.map(inc => inc.id_incidencia === id_incidencia ? {...inc, num_votos: Number(inc.num_votos) + 1} : inc));
     };
@@ -35,6 +50,7 @@ function MapaIncidencias() {
     };
 
     const handleVerDetalles = (incidencia) => {
+        setFiltrosAbiertos(false);
         setNuevaIncidencia(null);
         setIncidenciaSeleccionada(incidencia);
     };
@@ -43,6 +59,22 @@ function MapaIncidencias() {
         cargarIncidencias();
         setNuevaIncidencia(null);
         setIncidenciaSeleccionada(null);
+    };
+
+    const pedirUbicacion = () => {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            setUbicacionUsuario({
+                lat: pos.coords.latitude,
+                lon: pos.coords.longitude
+            });
+        }, (error) => {
+            console.error("ERROR GEOLOCALIZACIÓN:", error);
+            toast.error("Sin permisos de usuario, usando como centro de ubicación Madrid");
+            setUbicacionUsuario({
+                lat: 40.4168,
+                lon: -3.7038
+            });
+        });
     };
 
     // Cada vez que se carga, se cargan las incidencias y se resetean los campos
@@ -65,10 +97,20 @@ function MapaIncidencias() {
         document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
+    useEffect(() => {
+        if (!ubicacionUsuario) {
+            return;
+        }
+        cargarIncidencias();
+    }, [filtros, ubicacionUsuario]);
 
     const cargarIncidencias = async () => {
         try {
-            const data = await getIncidencias();
+            const data = await getIncidencias({
+                ...filtros,
+                lat: ubicacionUsuario?.lat,
+                lon: ubicacionUsuario?.lon
+            });
             setIncidencias(data);
         } catch (error) {
             console.error("ERROR", error);
@@ -116,11 +158,38 @@ function MapaIncidencias() {
                     nuevaIncidencia={nuevaIncidencia}
                     setNuevaIncidencia={setNuevaIncidencia}
                     onIncidenciaCreada={handleIncidenciaCreada}
+                    ubicacionUsuario={ubicacionUsuario}
                 />
             )}
             {vista === "perfil" && (
                 <PerfilUsuario/>
             )}
+
+            <button
+                onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
+                style={{
+                    position: "absolute",
+                    top: "20px",
+                    right: "20px",
+                    zIndex: 2500,
+                    width: "50px",
+                    height: "50px",
+                    borderRadius: "50%",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "20px",
+                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                    background: "white"
+                }}
+            >
+                <FiFilter size={22}/>
+            </button>
+            <PanelFiltros
+                abierto={filtrosAbiertos}
+                filtros={filtros}
+                setFiltros={setFiltros}
+                pedirUbicacion={pedirUbicacion}
+            />
             
             {incidenciaSeleccionada && (
                 
