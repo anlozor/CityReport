@@ -28,3 +28,22 @@ export async function recuperarContraseña(email) {
 
     return data;
 }
+
+export async function restablecerContraseña(token, contraseña1, contraseña2) {
+    const response = await fetch("http://localhost:3000/usuarios/restablecer-contrasena", {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({contraseña1, contraseña2})
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.mensaje);
+    }
+
+    return data;
+}

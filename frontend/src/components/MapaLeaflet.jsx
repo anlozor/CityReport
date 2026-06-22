@@ -104,23 +104,40 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                     key={inc.id_incidencia}
                     position={[inc.latitud, inc.longitud]}
                 >
-                    <Popup>
-                        <div>
+                    <Popup minWidth={250} maxWidth={400}>
+                        <div
+                            style={{
+                                width: "300px",
+                                padding: "5px"
+                            }}
+                        >
                             <h3>{inc.titulo}</h3>
-                            <p>Categoría: {inc.categoria_nombre}</p>
-                            <p>{inc.num_votos}</p>
-                            <button
-                                onClick={() => handleVotar(inc.id_incidencia)}
-                                disabled={votosUsuario.includes(inc.id_incidencia)}
+                            <p>{inc.descripcion}</p>
+                            <p><strong>Categoría:</strong> {inc.categoria_nombre}</p>
+                            <p><strong>Votos:</strong> {inc.num_votos}</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "8px",
+                                    justifyContent: "center",
+                                    marginTop: "10px"
+                                }}
                             >
-                                {votosUsuario.includes(inc.id_incidencia) ? "Votado" : "Votar"}
-                            </button>
+                                <button
+                                    onClick={() => handleVotar(inc.id_incidencia)}
+                                    disabled={votosUsuario.includes(inc.id_incidencia)}
+                                    style={{ background: "orange" }}
+                                >
+                                    {votosUsuario.includes(inc.id_incidencia) ? "Votado" : "Votar"}
+                                </button>
 
-                            <button
-                                onClick={() => handleVerDetalles(inc.id_incidencia)}
-                            >
-                                Ver detalles de la incidencia
-                            </button>
+                                <button
+                                    onClick={() => handleVerDetalles(inc.id_incidencia)}
+                                    style={{ background: "orange" }}
+                                >
+                                    Ver detalles de la incidencia
+                                </button>
+                            </div>
                         </div>
                     </Popup>
                 </Marker>

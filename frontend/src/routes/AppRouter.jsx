@@ -9,6 +9,7 @@ import RegistroNuevoUsuario from "../pages/RegistroNuevoUsuario";
 import MenuHamburguesa from "../layouts/MenuHamburguesa";
 import PerfilUsuario from "../pages/PerfilUsuario";
 import RecuperarContraseña from "../pages/RecuperarContraseña";
+import RestableerContraseña from "../pages/RestablecerContraseña";
 
 function AppRouter(){
     return (
@@ -43,6 +44,10 @@ function AppRouter(){
                 <Route
                     path="/recuperar-contrasena"
                     element={<RecuperarContraseña/>}
+                />
+                <Route
+                    path="/restablecer-contrasena"
+                    element={<RestableerContraseña/>}
                 />
 
             </Routes>

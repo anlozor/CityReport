@@ -286,8 +286,8 @@ router.patch('/verificar-activacion', async (req, res) => {
     }
 });
 
-// PATCH -> activar cuenta de gestor nueva --> solo gestores
-// Para establecer la contraseña del nuevo gestor
+// PATCH -> Para establecer la contraseña del nuevo gestor
+// Y para establecer una nueva contraseña tras haber hecho el proceos de contraseña olvidada
 router.patch('/restablecer-contrasena', authActivacion, usuarioNoBloqueado, async (req, res) => {
     try {
         // Leemos del token temporal el id_usuario
@@ -355,7 +355,7 @@ router.patch('/contrasena-olvidada', async (req, res) => {
             }, process.env.JWT_SECRET,
             {expiresIn: '15m'});
             // Enviamos mail con link
-            const enlace = `http://localhost:3000/usuarios/restablecer-contrasena?token=${token}`;
+            const enlace = `http://localhost:5173/restablecer-contrasena?token=${token}`;
             await enviarRecuperacion(email, enlace);
 
         }
