@@ -11,6 +11,8 @@ function MenuHamburguesa({children}) {
     const esMapa = location.pathname === "/mapa";
     const esLista = location.pathname === "/lista";
     const esPerfil = location.pathname === "/perfil";
+    const esNuevaIncidencia = location.pathname === "/nueva-incidencia";
+    const esSolicitudGestor = location.pathname === "/solicitar-gestor";
 
     const menuItemStyle = {
         width: "100%",
@@ -68,28 +70,36 @@ function MenuHamburguesa({children}) {
                     >
                         {!esPerfil && (
                             <button
-                            style={menuItemStyle}
-                            onClick={() => navigate("/perfil")}
-                        >
-                            Mi perfil
-                        </button>
+                                style={menuItemStyle}
+                                onClick={() => navigate("/perfil")}
+                            >
+                                Mi perfil
+                            </button>
                         )}
 
                         {!esMapa && (
                             <button
-                            style={menuItemStyle}
-                            onClick={() => navigate("/mapa")}
-                        >
-                            Ver mapa
-                        </button>
+                                style={menuItemStyle}
+                                onClick={() => navigate("/mapa")}
+                            >
+                                Ver mapa
+                            </button>
+                        )}
+                        {!esNuevaIncidencia && (
+                            <button
+                                style={menuItemStyle}
+                                onClick={() => navigate("/nueva-incidencia")}
+                            >
+                                Crear nueva incidencia
+                            </button>
                         )}
                         {!esLista && (
                             <button
-                            style={menuItemStyle}
-                            onClick={() => navigate("/lista")}
-                        >
-                            Ver lista de incidencias
-                        </button>
+                                style={menuItemStyle}
+                                onClick={() => navigate("/lista")}
+                            >
+                                Ver lista de incidencias
+                            </button>
                         )}
                         
                         <button
@@ -101,6 +111,16 @@ function MenuHamburguesa({children}) {
                         >
                             Cerrar sesión
                         </button>
+
+                        {!esSolicitudGestor && (
+                            <button
+                                style={menuItemStyle}
+                                onClick={() => navigate("/solicitar-gestor")}
+                            >
+                                ¿Quieres ser gestor? Envía tu solicitud
+                            </button>
+                        )}
+                        
                     </div>
                 )}
             </div>

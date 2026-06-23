@@ -66,18 +66,21 @@ function Login() {
                     alignItems: "center"
                 }}
             >
-                <h1>Login</h1>
+                <h1>CityReport</h1>
+                <h3>Inicia sesión:</h3>
 
                 <form onSubmit={handleSubmit}>
+                    <p>Email:</p>
                     <input
                         type="email"
-                        placeholder="Email"
+                        placeholder="email@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
 
                     <br/><br/>
 
+                    <p>Contraseña:</p>
                     <input
                         type="password"
                         placeholder="Contraseña"

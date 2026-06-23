@@ -9,6 +9,7 @@ import PerfilUsuario from "./PerfilUsuario";
 import { data } from "react-router-dom";
 import PanelFiltros from "../components/PanelFiltros";
 import {FiFilter} from "react-icons/fi";
+import ListadoIncidencias from "./ListadoIncidencias";
 
 function MapaIncidencias() {
     const [incidencias, setIncidencias] = useState([]);
@@ -164,6 +165,12 @@ function MapaIncidencias() {
             {vista === "perfil" && (
                 <PerfilUsuario/>
             )}
+            {vista === "listado" && (
+                <ListadoIncidencias
+                    onVerDetalles={handleVerDetalles}
+                    onActualizarVoto={actualizarVoto}
+                />
+            )}
 
             <button
                 onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
@@ -209,7 +216,6 @@ function MapaIncidencias() {
                         boxSizing: "border-box"
                     }}
                 >
-                    {console.log(incidenciaSeleccionada)}
                     <button
                         onClick={() => setIncidenciaSeleccionada(null)}
                         style={{

@@ -10,6 +10,9 @@ import MenuHamburguesa from "../layouts/MenuHamburguesa";
 import PerfilUsuario from "../pages/PerfilUsuario";
 import RecuperarContraseña from "../pages/RecuperarContraseña";
 import RestableerContraseña from "../pages/RestablecerContraseña";
+import ListadoIncidencias from "../pages/ListadoIncidencias";
+import NuevaIncidenciaPagina from "../pages/NuevaIncidenciaPagina";
+import SolicitarGestor from "../pages/SolicitarGestor";
 
 function AppRouter(){
     return (
@@ -25,12 +28,20 @@ function AppRouter(){
                         element={<InfoIncidencia />}
                     />
                     <Route
-                        path="/incidencias/nueva"
-                        element={<NuevaIncidencia/>}
+                        path="/nueva-incidencia"
+                        element={<NuevaIncidenciaPagina/>}
                     />
                     <Route
                         path="/perfil"
                         element={<PerfilUsuario/>}
+                    />
+                    <Route
+                        path="/lista"
+                        element={<ListadoIncidencias/>}
+                    />
+                    <Route
+                        path="/solicitar-gestor"
+                        element={<SolicitarGestor/>}
                     />
                 </Route>
                 <Route

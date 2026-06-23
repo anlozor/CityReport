@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { postNuevaIncidencia } from "../services/incidenciasService";
 import { toast } from "react-toastify";
 
-function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
+function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada, modo = "popup"}) {
     const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
 
     const [direccion_texto, setDireccionTexto] = useState(direccion || "");
+    const esModoMapa = latitud != null && longitud != null && direccion;
     const lat = latitud;
     const lon = longitud;
 
@@ -47,7 +48,7 @@ function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
         setError("");
         setExito("");
 
-        if (!titulo || !descripcion || !direccion_texto || !categoria || lat === null || lon === null) {
+        if (!titulo || !descripcion || !direccion_texto || !categoria || (!esModoMapa && !direccion_texto.trim())) {
             setError("Debes rellenar todos los campos");
             return;
         }
@@ -57,12 +58,28 @@ function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
         try {
             const formData = new FormData(); // Para subir archivos, imágenes en este caso
 
+            let finalLat = lat;
+            let finalLon = lon;
+
+            if (!esModoMapa) {
+                const res = await fetch(`https://nominatim.openstreetmaporg/search?format=json&q=${direccion_texto}`);
+
+                const dat = await res.json();
+
+                if (!dat.length) {
+                    setError("No se ha encontrado la dirección");
+                    return;
+                }
+
+                finalLat = data[0].lat;
+                finalLon = data[0].lon;
+            }
             formData.append("titulo", titulo);
             formData.append("descripcion", descripcion);
             formData.append("direccion_texto", direccion_texto);
             formData.append("categoria", categoria);
-            formData.append("lat", lat);
-            formData.append("lon", lon);
+            formData.append("lat", finalLat);
+            formData.append("lon", finalLon);
 
             if (imagen1) {
                 formData.append("imagenes", imagen1);
@@ -101,20 +118,23 @@ function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
         }
     };
 
+    const esPagina = modo === "pagina";
+
     const inputStyle = {
         width: "100%",
-        padding: "8px 10px",
+        padding: esPagina ? "12px 14px" : "8px 10px",
         marginBottom: "10px",
         borderRadius: "8px",
         border: "1px solid #ddd",
         outline: "none",
-        fontSize: "13px"
+        fontSize: esPagina ? "15px" : "13px"
     };
 
     return (
         <div
             style={{
-                width: "260px",
+                width: esPagina ? "100%" : "260px",
+                maxWidth: esPagina ? "600px" : "260px",
                 margin: "0 auto",
                 textAlign: "center"
             }}
@@ -143,7 +163,11 @@ function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
                         placeholder="Descripción"
                         value={descripcion}
                         onChange={(e) => setDescripcion(e.target.value)}
-                        style={inputStyle}
+                        style={{
+                            ...inputStyle,
+                            minHeight: esPagina ? "120px" : "80px",
+                            resize: "none"
+                        }}
                     />
                 </div>
                 <div className="campo">
@@ -163,61 +187,124 @@ function NuevaIncidencia({latitud, longitud, direccion, onIncidenciaCreada}) {
                         ))}
                     </select>
                 </div>
-                <div
-                    style={{
-                        fontSize: "12px",
-                        padding: "8px",
-                        marginBottom: "10px",
-                        background: "#f5f5f5",
-                        borderRadius: "8px",
-                        color: "#444"
-                    }}
-                >
-                    {direccion_texto}
-                </div>
-                <div className="campo">
-                    <h3>Imagen 1</h3>
+                {esModoMapa ? (
+                    <div
+                        style={{
+                            fontSize: "12px",
+                            padding: "8px",
+                            marginBottom: "10px",
+                            background: "#f5f5f5",
+                            borderRadius: "8px",
+                            color: "#444"
+                        }}
+                    >
+                        {direccion_texto}
+                    </div>
+                ) : (
                     <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setImagen1(e.target.files[0])}
+                        type="text"
+                        placeholder="Introduce una dirección"
+                        value={direccion_texto}
+                        onChange={(e) => setDireccionTexto(e.target.value)}
                         style={inputStyle}
                     />
-                    {imagen1 && (
-                        <img
-                            src={URL.createObjectURL(imagen1)}
-                            alt="preview1"
+                )}
+                
+                <div className="campo">
+                    <label
+                        style={{
+                            width: "100%",
+                            height: "160px",
+                            borderRadius: "10px",
+                            border: "2px dashed #bbb",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            overflow: "hidden",
+                            marginBottom: "10px"
+                        }}
+                    >
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    setImagen1(file);
+                                }
+                            }}
                             style={{
-                                width: "100%",
-                                maxHeight: "100px",
-                                objectFit: "cover",
-                                borderRadius: "8px",
-                                marginTop: "6px"
+                                display: "none"
                             }}
                         />
-                    )}
+                        {imagen1 ? (
+                            <img
+                                src={URL.createObjectURL(imagen1)}
+                                style={{
+                                    width: "100%",
+                                    mHeight: "100%",
+                                    objectFit: "cover"
+                                }}
+                            />
+                        ) : (
+                            <span
+                                style={{
+                                    fontSize: "13px"
+                                }}
+                            >
+                                + Imagen
+                            </span>
+                        )}
+                    </label>
                 </div>
                 <div className="campo">
-                    <h3>Imagen 2</h3>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setImagen2(e.target.files[0])}
-                        style={inputStyle}
-                    />
-                    {imagen2 && (
-                        <img
-                            src={URL.createObjectURL(imagen2)}
-                            alt="preview2"
+                    <label
+                        style={{
+                            width: "100%",
+                            height: "160px",
+                            borderRadius: "10px",
+                            border: "2px dashed #bbb",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            overflow: "hidden",
+                            marginBottom: "10px"
+                        }}
+                    >
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    setImagen2(file);
+                                }
+                            }}
                             style={{
-                                width: "100%",
-                                maxHeight: "100px",
-                                objectFit: "cover",
-                                borderRadius: "8px",
-                                marginTop: "6px"
+                                display: "none"
                             }}
                         />
-                    )}
+                        {imagen2 ? (
+                            <img
+                                src={URL.createObjectURL(imagen2)}
+                                style={{
+                                    width: "100%",
+                                    mHeight: "100%",
+                                    objectFit: "cover"
+                                }}
+                            />
+                        ) : (
+                            <span
+                                style={{
+                                    fontSize: "13px"
+                                }}
+                            >
+                                + Imagen
+                            </span>
+                        )}
+                    </label>
                 </div>
                 <button 
                     type="submit"

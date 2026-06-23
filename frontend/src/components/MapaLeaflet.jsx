@@ -193,6 +193,7 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                                         onIncidenciaCreada();
                                     }
                                 }}
+                                modo="popup"
                             />
                         </div>
                     </Popup>
