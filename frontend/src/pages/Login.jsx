@@ -76,6 +76,9 @@ function Login() {
                         placeholder="email@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        style={{
+                            fontSize: "16px"
+                        }}
                     />
 
                     <br/><br/>
@@ -86,11 +89,14 @@ function Login() {
                         placeholder="Contraseña"
                         value={contraseña}
                         onChange={(e) => setContraseña(e.target.value)}
+                        style={{
+                            fontSize: "16px"
+                        }}
                     />
 
                     <br/><br/>
 
-                    <button type="Submit" style={{background: "orange"}}>Iniciar sesión</button>
+                    <button type="Submit" style={{background: "orange", fontSize: "16px"}}>Iniciar sesión</button>
                 </form>
                 <br/>
                 <button
@@ -102,7 +108,8 @@ function Login() {
                         border: "none",
                         color: "#3b82f6",
                         cursor: "pointer",
-                        textDecoration: "underline"
+                        textDecoration: "underline",
+                        fontSize: "13px"
                     }}
                 >
                     ¿Has olvidado tu contraseña?
@@ -116,7 +123,8 @@ function Login() {
                         border: "none",
                         color: "#3b82f6",
                         cursor: "pointer",
-                        textDecoration: "underline"
+                        textDecoration: "underline",
+                        fontSize: "13px"
                     }}
                 >
                     ¿No tienes cuenta? Pincha aquí y regístrate

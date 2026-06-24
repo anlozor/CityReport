@@ -318,7 +318,7 @@ const postNuevaIncidencia = async (req, res) => {
             // Obtenemos el id de la incidencia
             incidencia_id = nuevaIncidencia.rows[0].id_incidencia;
             // Usamos guardarImagenes
-            imagenesSubidas = await guardarImagenes(imagenes, usuario_id, incidencia_id);
+            imagenesSubidas = await guardarImagenes(pool, imagenes, usuario_id, incidencia_id);
 
         }
 

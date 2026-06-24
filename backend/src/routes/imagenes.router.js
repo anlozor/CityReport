@@ -29,7 +29,7 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), async (r
                 mensaje: 'Falta el id de la incidencia'});
         }
         
-        const imagenesSubidas = await guardarImagenes(imagenes, req.usuario.id_usuario, id_incidencia);
+        const imagenesSubidas = await guardarImagenes(pool, imagenes, req.usuario.id_usuario, id_incidencia);
 
         // Devolvemos las imágenes subidas
         res.status(201).json({

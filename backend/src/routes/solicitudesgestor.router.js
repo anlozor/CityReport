@@ -38,7 +38,37 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
     }
 });
 
-// GET -> obtener datos de una solicitud específica --> solo gestores o propio usuario
+// GET -> obtener la información de la solicitud enviada --> propio usuario
+router.get('/mi-solicitud', auth, usuarioNoBloqueado, async (req, res) => {
+    try {
+        const id = req.usuario.id_usuario;
+
+        const result = await pool.query(`SELECT * FROM solicitud_gestor WHERE usuario_id = $1 
+            ORDER BY fecha_solicitud DESC LIMIT 1`, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "No tienes ninguna solicitud de gestor activa"
+            });
+        }
+
+        const solicitud = result.rows[0];
+
+        return res.status(200).json({
+            mensaje: "Solicitud obtenida correctamente",
+            solicitud
+        });
+
+    } catch (error) {
+        console.error("Error al obtener la solicitud:", error);
+        return res.status(500).json({
+            mensaje: "Error al obtener la solicitud"
+        });
+        
+    }
+});
+
+// GET -> obtener datos de una solicitud específica --> solo gestores
 router.get('/:id', auth, usuarioNoBloqueado, autorizarRol (1, 2), async (req, res) => {
     try {
         // Leemos el id de la solicitud sobre la que queremos obtener la información
@@ -184,7 +214,7 @@ router.post('/', auth, usuarioNoBloqueado, autorizarRol(3), upload.array('imagen
         const solicitud = await cliente.query(`INSERT INTO solicitud_gestor (email, nombre, dni, motivo_solicitud, direccion, cp, localidad, provincia, fecha_solicitud, estado, usuario_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE, $9, $10) RETURNING *`, [email, nombre, dni, motivo_solicitud, direccion, cp, localidad, provincia, 'Enviada', id_usuario]);
         
-        const imagenesGuardadas = await guardarImagenes(imagenes, id_usuario, null, null, solicitud.rows[0].id_solicitud);
+        const imagenesGuardadas = await guardarImagenes(cliente, imagenes, id_usuario, null, null, solicitud.rows[0].id_solicitud);
 
         await cliente.query('COMMIT');
 

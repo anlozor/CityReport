@@ -13,6 +13,7 @@ import RestableerContraseña from "../pages/RestablecerContraseña";
 import ListadoIncidencias from "../pages/ListadoIncidencias";
 import NuevaIncidenciaPagina from "../pages/NuevaIncidenciaPagina";
 import SolicitarGestor from "../pages/SolicitarGestor";
+import EstadoSolicitud from "../pages/EstadoSolicitud";
 
 function AppRouter(){
     return (
@@ -42,6 +43,10 @@ function AppRouter(){
                     <Route
                         path="/solicitar-gestor"
                         element={<SolicitarGestor/>}
+                    />
+                    <Route
+                        path="/estado-solicitud"
+                        element={<EstadoSolicitud/>}
                     />
                 </Route>
                 <Route

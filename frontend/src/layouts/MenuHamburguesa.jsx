@@ -13,6 +13,7 @@ function MenuHamburguesa({children}) {
     const esPerfil = location.pathname === "/perfil";
     const esNuevaIncidencia = location.pathname === "/nueva-incidencia";
     const esSolicitudGestor = location.pathname === "/solicitar-gestor";
+    const esEstadoSolicitud = location.pathname === "/estado-solicitud";
 
     const menuItemStyle = {
         width: "100%",
@@ -118,6 +119,14 @@ function MenuHamburguesa({children}) {
                                 onClick={() => navigate("/solicitar-gestor")}
                             >
                                 ¿Quieres ser gestor? Envía tu solicitud
+                            </button>
+                        )}
+                        {!esEstadoSolicitud && (
+                            <button
+                                style={menuItemStyle}
+                                onClick={() => navigate("/estado-solicitud")}
+                            >
+                                Estado de mi solicitud
                             </button>
                         )}
                         

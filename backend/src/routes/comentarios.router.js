@@ -124,7 +124,7 @@ router.post('/', auth, usuarioNoBloqueado, upload.array('imagen', 1), async (req
 
         // Una vez hemos guardado el comentario, miramos si hay imagenes, y si las hay, las guardamos ya sabiendo el id_comentario
         if (req.files && req.files.length > 0) {
-            await guardarImagenes(req.files, usuario_id, null, result.rows[0].id_comentario);
+            await guardarImagenes(pool, req.files, usuario_id, null, result.rows[0].id_comentario);
         }
         
         res.status(201).json(result.rows[0]);
