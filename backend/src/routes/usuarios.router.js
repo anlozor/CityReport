@@ -41,7 +41,8 @@ router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
                 ELSE usuario.alias
             END AS alias,
             (SELECT COUNT(*) FROM incidencia WHERE usuario_id = $1) AS num_incidencias,
-            (SELECT COUNT(*) FROM comentario WHERE usuario_id = $1) AS num_comentarios
+            (SELECT COUNT(*) FROM comentario WHERE usuario_id = $1) AS num_comentarios,
+            (SELECT COUNT(*) FROM voto WHERE usuario_id = $1) AS num_votos
             FROM usuario JOIN rol ON usuario.rol_id = rol.id_rol WHERE usuario.id_usuario = $1`, [id]);
 
         res.status(200).json(result.rows[0]);

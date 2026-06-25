@@ -11,6 +11,28 @@ const {guardarImagenes} = require('../helpers/imagenes.helper');
 const router = express.Router();
 
 // 3. Rutas
+// GET -> obtener todas las imagenes --> solo gestores
+router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+   try {
+    const result = await pool.query(`SELECT imagen.*, usuario.nombre, comentario.incidencia_id AS incidencia_comentario FROM imagen 
+        JOIN usuario ON usuario.id_usuario = imagen.usuario_id 
+        LEFT JOIN comentario ON comentario.id_comentario = imagen.comentario_id
+        WHERE imagen.esta_eliminada = false AND imagen.solicitud_id IS NULL 
+        ORDER BY imagen.fecha_subida DESC`);
+
+    res.status(200).json({
+        mensaje: "Imagenes obtenidas correctamente",
+        imagenes: result.rows
+    });
+   } catch (error) {
+    console.error("Error al obtener las imagenes:", error);
+    res.status(500).json({
+        mensaje: "Error al obtener las imagenes"
+    });
+    
+   } 
+});
+
 // POST -> subir imágenes de una incidencia --> cualquier usuario
 router.post('/', auth, usuarioNoBloqueado, upload.array('imagenes', 2), async (req, res) => {
     try {

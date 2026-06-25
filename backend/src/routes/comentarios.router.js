@@ -12,6 +12,26 @@ const {guardarImagenes} = require('../helpers/imagenes.helper');
 const router = express.Router();
 
 // 3. Rutas
+// GET -> obtener todos los comentarios --> solo gestores
+router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+    try {
+        const result = await pool.query(`SELECT comentario.*, usuario.nombre FROM comentario JOIN usuario ON usuario.id_usuario = comentario.usuario_id 
+            WHERE comentario.esta_eliminado = false ORDER BY comentario.fecha_creacion DESC`);
+
+        res.status(200).json({
+            mensaje: "Comentarios obtenidos correctamente",
+            comentarios: result.rows
+        });
+        
+    } catch (error) {
+        console.error("Error al obtener los comentarios:", error);
+        res.status(500).json({
+            mensaje: "Error al obtener los comentarios"
+        });
+        
+    }
+});
+
 // GET -> obtener todos los comentarios de una incidencia --> cualquier usuario para ver los comentarios de una incidencia
 router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
     try {

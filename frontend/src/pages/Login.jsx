@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/loginService";
 import { Link } from "react-router-dom";
+import { sacarRoldelToken } from "../services/despiezarTokenService";
 
 function Login() {
     // useState se usa para datos que cambian, como un contador que cambia según los botones que pulses
@@ -31,7 +32,14 @@ function Login() {
             if (response.ok) {
                 localStorage.setItem("token", data.token);
                 console.log("Token guardado");
-                navigate("/mapa");
+
+                const rol_id = sacarRoldelToken();
+                if (rol_id === 1 || rol_id === 2) {
+                    navigate("/home-gestor");
+                } else {
+                    navigate("/mapa");
+                }
+                
             } else {
                 localStorage.removeItem("token"); // Así si estoy haciendo pruebas no se me queda guardado el token innecesariamente
             }
@@ -96,7 +104,7 @@ function Login() {
 
                     <br/><br/>
 
-                    <button type="Submit" style={{background: "orange", fontSize: "16px"}}>Iniciar sesión</button>
+                    <button type="Submit" style={{background: "orange", fontSize: "16px", fontWeight: "bold"}}>Iniciar sesión</button>
                 </form>
                 <br/>
                 <button

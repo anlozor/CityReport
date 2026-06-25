@@ -31,3 +31,14 @@ export const obtenerComentariosIncidencia = async (id_incidencia) => {
 
     return {response, data};
 };
+
+export async function getComentarios() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:3000/comentarios`,{
+        headers: {Authorization: `Bearer ${token}`}
+    });
+    const data = await response.json();
+
+    return data.comentarios;
+}

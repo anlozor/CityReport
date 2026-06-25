@@ -14,6 +14,7 @@ import ListadoIncidencias from "../pages/ListadoIncidencias";
 import NuevaIncidenciaPagina from "../pages/NuevaIncidenciaPagina";
 import SolicitarGestor from "../pages/SolicitarGestor";
 import EstadoSolicitud from "../pages/EstadoSolicitud";
+import HomeGestor from "../pages/HomeGestor";
 
 function AppRouter(){
     return (
@@ -64,6 +65,12 @@ function AppRouter(){
                 <Route
                     path="/restablecer-contrasena"
                     element={<RestableerContraseña/>}
+                />
+
+
+                <Route
+                    path="/home-gestor"
+                    element={<HomeGestor/>}
                 />
 
             </Routes>

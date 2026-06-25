@@ -63,6 +63,9 @@ export default function RestableerContraseña() {
                         value={contraseña1}
                         onChange={(e) => setContraseña1(e.target.value)}
                         required
+                        style={{
+                            fontSize: "16px"
+                        }}
                     />
                     <input
                         type="password"
@@ -70,6 +73,9 @@ export default function RestableerContraseña() {
                         value={contraseña2}
                         onChange={(e) => setContraseña2(e.target.value)}
                         required
+                        style={{
+                            fontSize: "16px"
+                        }}
                     />
                     <button
                         type="submit"
@@ -79,7 +85,8 @@ export default function RestableerContraseña() {
                             borderRadius: "6px",
                             background: "orange",
                             fontWeight: "bold",
-                            cursor: "pointer"
+                            cursor: "pointer",
+                            fontSize: "16px"
                         }}
                     >
                         Cambiar contraseña

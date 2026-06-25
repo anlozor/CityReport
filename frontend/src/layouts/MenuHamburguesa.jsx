@@ -102,16 +102,6 @@ function MenuHamburguesa({children}) {
                                 Ver lista de incidencias
                             </button>
                         )}
-                        
-                        <button
-                            style={menuItemStyle}
-                            onClick={() => {
-                                localStorage.removeItem("token");
-                                navigate("/");
-                            }}
-                        >
-                            Cerrar sesión
-                        </button>
 
                         {!esSolicitudGestor && (
                             <button
@@ -129,6 +119,16 @@ function MenuHamburguesa({children}) {
                                 Estado de mi solicitud
                             </button>
                         )}
+
+                        <button
+                            style={menuItemStyle}
+                            onClick={() => {
+                                localStorage.removeItem("token");
+                                navigate("/");
+                            }}
+                        >
+                            Cerrar sesión
+                        </button>
                         
                     </div>
                 )}

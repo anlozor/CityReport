@@ -60,7 +60,8 @@ export default function RecuperarContraseña() {
                             padding: "10px",
                             borderRadius: "6px",
                             border: "1px solid #ccc",
-                            outline: "none"
+                            outline: "none",
+                            fontSize: "16px"
                         }}
                     />
                     <button type="submit"
@@ -70,7 +71,8 @@ export default function RecuperarContraseña() {
                             border: "none",
                             background: "orange",
                             cursor: "pointer",
-                            fontWeight: "bold"
+                            fontWeight: "bold",
+                            fontSize: "16px"
                         }}
                     >
                         Enviar recuperación

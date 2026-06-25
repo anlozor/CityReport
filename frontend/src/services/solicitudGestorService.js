@@ -37,3 +37,15 @@ export async function reenviarCorreoSolicitud(id) {
 
     return {response, data};
 }
+
+export async function getSolicitudes(params) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3000/solicitudes-gestor", {
+        headers: {Authorization: `Bearer ${token}`}
+    });
+
+    const data = await response.json();
+
+    return data.result;
+}

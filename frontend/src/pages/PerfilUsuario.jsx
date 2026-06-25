@@ -151,6 +151,21 @@ function PerfilUsuario() {
                             Comentarios
                         </p>
                     </div>
+
+                    <div
+                        style={{
+                            flex: 1,
+                            padding: "12px",
+                            background: "#f7f9fc",
+                            borderRadius: "12px",
+                            textAlign: "center"
+                        }}
+                    >
+                        <h3 style={{color: "#ff7a00"}}>{perfil.num_votos}</h3>
+                        <p style={{margin: 0, fontSize: "0.8rem", color: "#666"}}>
+                            Votos
+                        </p>
+                    </div>
                 </div>
                 <input
                     name="nombre"

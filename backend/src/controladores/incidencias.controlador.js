@@ -13,13 +13,13 @@ const getIncidencias = async (req, res) => {
         // Lo mejor es construir la query final a trozos, para que sea más fácil montarla dependiendo de los parámetros que recibamos
         //let query = 'SELECT incidencia.* FROM incidencia';
         // Como la intención es mostrar el número de votos que tiene cada incidencia, vamos a dividir query en select y from
-        let select = ['incidencia.*', 'COUNT(voto.id_voto) AS num_votos', 'ST_X(incidencia.ubicacion::geometry) AS longitud', 'ST_Y(incidencia.ubicacion::geometry) AS latitud']; // De esta manera, si se selecciona el filtro de votos, podemos añadir el COUNT(voto.id_voto) AS num_votos al select para mostrarlo
+        let select = ['incidencia.*', 'usuario.nombre', 'COUNT(voto.id_voto) AS num_votos', 'ST_X(incidencia.ubicacion::geometry) AS longitud', 'ST_Y(incidencia.ubicacion::geometry) AS latitud']; // De esta manera, si se selecciona el filtro de votos, podemos añadir el COUNT(voto.id_voto) AS num_votos al select para mostrarlo
         let from = ['incidencia'];
         let where = ['incidencia.esta_eliminada = false'];
         let values = [];
         let order = [];
-        let join = ['LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia'];
-        let groupBy = ['incidencia.id_incidencia'];
+        let join = ['LEFT JOIN voto ON voto.incidencia_id = incidencia.id_incidencia', 'JOIN usuario ON usuario.id_usuario = incidencia.usuario_id'];
+        let groupBy = ['incidencia.id_incidencia', 'usuario.nombre'];
 
         // Un get normal y sencillo sería así:
         /*const result = await pool.query('SELECT * FROM incidencia WHERE esta_eliminada = false');
