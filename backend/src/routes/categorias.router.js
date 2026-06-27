@@ -9,7 +9,7 @@ const {usuarioNoBloqueado} = require('../middlewares/usuarios.middleware');
 const router = express.Router();
 
 // 3. Rutas
-// GET -> obtener todas las categorías de las incidencias --> cualquier usuario para crear una incidencia
+// GET -> obtener todas las categorías de las incidencias --> cualquier usuario para crear una incidencia o gestores para cambiarla
 router.get('/', auth, usuarioNoBloqueado, async (req, res) => {
     try {
         // Primero obtenemos las categorías

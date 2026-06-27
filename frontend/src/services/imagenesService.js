@@ -8,3 +8,19 @@ export async function getImagenes() {
 
     return data.imagenes;
 }
+
+export async function eliminarImagen(idImagen) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:3000/imagenes/${idImagen}`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "aaplication/json",
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}

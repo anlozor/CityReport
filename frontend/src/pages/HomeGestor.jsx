@@ -33,7 +33,7 @@ function HomeGestor() {
     }, []);
 
     const filtrarUltimas72h = (lista, campoFecha) => {
-        const limite = Date.now() - 168 * 60 * 60 * 1000;
+        const limite = Date.now() - 500 * 60 * 60 * 1000;
 
         return lista.filter(item => {
             return new Date(item[campoFecha]).getTime() >= limite;
@@ -60,15 +60,16 @@ function HomeGestor() {
     };
 
     const hayNovedades = incidenciasNuevas.length > 0 || comentariosNuevos.length > 0 || imagenesNuevas.length > 0 || (rold_id === 1 && solicitudesNuevas.length > 0);
+    const totalNovedades = incidenciasNuevas.length + comentariosNuevos.length + imagenesNuevas.length + solicitudesNuevas.length;
 
     const abrirImagen = (img) => {
         if (img.incidencia_id) {
-            navigate(`/incidencia/${img.incidencia_id}`);
+            navigate(`/gestion/incidencias/${img.incidencia_id}`);
             return;
         }
 
         if (img.incidencia_comentario) {
-            navigate(`/incidencia/${img.incidencia_comentario}`);
+            navigate(`/gestion/incidencias/${img.incidencia_comentario}`);
         }
     };
 
@@ -91,6 +92,18 @@ function HomeGestor() {
                 <div>
                     <h1 style={{marginBottom: "5px"}}>
                         Centro de notificaciones
+                        <span
+                            style={{
+                                marginLeft: "10px",
+                                background: "orange",
+                                color: "white",
+                                borderRadius: "20px",
+                                padding: "2px 10px",
+                                fontSize: "30px"
+                            }}
+                        >
+                            {totalNovedades}
+                        </span>
                     </h1>
                     <br />
                     <p
@@ -168,7 +181,7 @@ function HomeGestor() {
                         incidenciasNuevas.map((i) => (
                             <div
                                 key={i.id_incidencia}
-                                onClick={() => navigate(`/incidencia/${i.id_incidencia}`)}
+                                onClick={() => navigate(`/gestion/incidencias/${i.id_incidencia}`)}
                                 style={{
                                     cursor: "pointer",
                                     padding: "10px",
@@ -228,7 +241,7 @@ function HomeGestor() {
                         comentariosNuevos.map((c) => (
                             <div
                                 key={c.id_comentario}
-                                onClick={() => navigate(`/incidenica/${c.incidencia_id}`)}
+                                onClick={() => navigate(`/gestion/incidencias/${c.incidencia_id}`)}
                                 style={{
                                     cursor: "pointer",
                                     padding: "10px",
@@ -360,7 +373,7 @@ function HomeGestor() {
                         solicitudesNuevas.map((s) => (
                             <div
                                 key={s.id_solicitud}
-                                onClick={() => navigate(`/solciitud/${s.id_solicitud}`)}
+                                onClick={() => navigate(`/gestion/solicitud/${s.id_solicitud}`)}
                                 style={{
                                     cursor: "pointer",
                                     padding: "10px",

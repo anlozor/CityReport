@@ -72,6 +72,10 @@ function AppRouter(){
                     path="/home-gestor"
                     element={<HomeGestor/>}
                 />
+                <Route
+                    path="/gestion/incidencias/:id"
+                    element={<InfoIncidencia/>}
+                />
 
             </Routes>
         </BrowserRouter>

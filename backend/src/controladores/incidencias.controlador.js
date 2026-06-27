@@ -446,7 +446,7 @@ const patchEditarIncidencia = async (req, res) => {
                 set.push(`estado_nombre = $${values.length + 1}`);
                 values.push(estadoNuevo);
 
-                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.idGestor, datos);
+                const camposCambioEstado = obtenerCamposCambioEstado(estadoNuevo, req.usuario.usuario_id, datos);
                 for (const campo of Object.keys(camposCambioEstado)) {
                     // En este caso lo comprobamos al revés, ya que tenemos más de un campo (para no ser redundantes) que iría con CURRENT_DATE, y así es más rápido
                     if (camposCambioEstado[campo] === 'CURRENT_DATE') {
@@ -462,7 +462,7 @@ const patchEditarIncidencia = async (req, res) => {
             }    
         }
 
-        set.push(`fecha_actualizacion = CURRENT_DATE`);
+        //set.push(`fecha_actualizacion = CURRENT_DATE`);
         where.push(`id_incidencia = $${values.length + 1}`);
         values.push(idIncidencia);
 

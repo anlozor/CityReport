@@ -25,7 +25,7 @@ const esCambioEstadoValido = (estadoActual, estadoNuevo) => {
 };
 
 // obtenerCamposCambioEstado: función para obtener los campos que se deben actualizar con el cambio de estado
-const obtenerCamposCambioEstado = (estadoNuevo, idGestor, body = {}) => {
+const obtenerCamposCambioEstado = (estadoNuevo, idUsuarioGestor, body = {}) => {
     // Aquí vamso a añadir los campos que correspondan según el estado
     const campos = {};
 
@@ -33,7 +33,7 @@ const obtenerCamposCambioEstado = (estadoNuevo, idGestor, body = {}) => {
         case 'Validada':
             campos.fecha_validacion = 'CURRENT_DATE';
             campos.fecha_actualizacion = 'CURRENT_DATE';
-            campos.validada_por = idGestor;
+            campos.validada_por = idUsuarioGestor;
             break;
     
         case 'En proceso':

@@ -64,3 +64,31 @@ export async function postNuevaIncidencia(datos) {
 
     return {response, data};
 }
+
+export async function patchEditarIncidencia(id, datos) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:3000/incidencias/${id}`, {
+        method: "PATCH",
+        headers: {Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"},
+        body: JSON.stringify(datos)
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}
+
+export async function eliminarIncidencia(idIncidencia) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`htp://localhost:3000/incidencias/${idIncidencia}/eliminar`, {
+        method: "PATCH",
+        headers: {Authorization: `Bearer ${token}`}
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}

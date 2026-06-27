@@ -44,7 +44,7 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
                     mensaje: 'La incidencia no existe'});
             }
         // Luego obtenemos los comentarios de la incidencia que no estén eliminados ordenados por fecha de creación de más reciente a más antiguo
-        const result = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo, 
+        const result = await pool.query(`SELECT comentario.id_comentario, comentario.texto, comentario.fecha_creacion, comentario.es_anonimo,
             usuario.nombre, usuario.alias, usuario.identificador_gestor,
             imagen.id_imagen, imagen.ruta
             FROM comentario JOIN usuario ON comentario.usuario_id = usuario.id_usuario
@@ -53,7 +53,7 @@ router.get('/incidencia/:id', auth, usuarioNoBloqueado, async (req, res) => {
             ORDER BY comentario.fecha_creacion DESC`, [id]);
         // Además, utilizamos un join para obtener el nombre del usuario que ha hecho el comentario y su alias por si ha marcado el comentario como anónimo
         // Y otro join para poder obtener las imagenes relacionadas a cada comentario
-        console.log("RESULTADO:", result.rows);
+        
         // Comprobamos que hay comentarios y sino devolvemos un mensaje indicando que no hay comentarios
         if (result.rows.length === 0) {
             return res.status(200).json({
@@ -192,11 +192,11 @@ router.patch('/:id/eliminar', auth, usuarioNoBloqueado, async (req, res) => {
 
         // Eliminamos el comentario
         await cliente.query(`UPDATE comentario SET esta_eliminado = true, eliminado_por = $1, fecha_eliminacion = CURRENT_DATE 
-            WHERE id_comentario = $2 RETURNING *`, [req.usuario.idGestor, id]);
+            WHERE id_comentario = $2 RETURNING *`, [req.usuario.usuario_id, id]);
 
         // Eliminamos imagenes asociadas
         await cliente.query(`UPDATE imagen SET esta_eliminada = true, fecha_eliminacion = CURRENT_DATE, eliminado_por = $1 
-            WHERE comentario_id = $2`, [req.usuario.idGestor, id]);
+            WHERE comentario_id = $2`, [req.usuario.usuario_id, id]);
             
         await cliente.query('COMMIT');
         res.status(200).json({

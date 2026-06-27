@@ -42,3 +42,16 @@ export async function getComentarios() {
 
     return data.comentarios;
 }
+
+export async function eliminarComentario(idComentario) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:3000/comentarios/${idComentario}`, {
+        method: "PATCH",
+        headers: {Authorization: `Bearer ${token}`}
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}
