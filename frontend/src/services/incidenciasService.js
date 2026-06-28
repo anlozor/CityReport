@@ -2,20 +2,20 @@ export async function getIncidencias(filtros = {}) {
     const token = localStorage.getItem("token");
     const params = new URLSearchParams();
 
-    if (filtros.votos === "true") {
+    if (filtros.votos) {
         params.append("votos", "true");
     }
-    if (filtros.historicas === "true") {
+    if (filtros.historicas) {
         params.append("historicas", "true");
     }
     if (filtros.fecha) {
         params.append("fecha", filtros.fecha);
     }
-    if (filtros.propias === "true") {
+    if (filtros.propias) {
         params.append("propias", "true");
     }
     if (filtros.estado?.length > 0) {
-        filtros.estado.forEach(e => params.append("estado", e));
+        filtros.estado.forEach(e => params.append("estado", e.charAt(0).toUpperCase() + e.slice(1)));
     }
     if (filtros.proximidadActivada && filtros.proximidad) {
         params.append("proximidad", filtros.proximidad);

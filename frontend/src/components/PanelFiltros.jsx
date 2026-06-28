@@ -1,4 +1,4 @@
-export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicacion}) {
+export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicacion, mostrarVotos = true}) {
     if (!abierto) {
         return null;
     }
@@ -52,25 +52,27 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
                     gap: "8px"
                 }}
             >
-                <label
-                    style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "center"
-                    }}
-                >
-                    <input
-                        type="checkbox"
-                        checked={filtros.votos === "true"}
-                        onChange={(e) => setFiltros({
-                            ...filtros,
-                            votos: e.target.checked ? "true" : "false"
-                            })
-                        }
-                    />
-                    Más votadas
-                </label>
-
+                {mostrarVotos && (
+                    <label
+                        style={{
+                            display: "flex",
+                            gap: "8px",
+                            alignItems: "center"
+                        }}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={filtros.votos === true}
+                            onChange={(e) => setFiltros({
+                                ...filtros,
+                                votos: e.target.checked ? true : false
+                                })
+                            }
+                        />
+                        Más votadas
+                    </label>
+                )}
+                
                 <label
                     style={{
                         display: "flex",
@@ -80,10 +82,10 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
                 >
                     <input
                         type="checkbox" 
-                        checked={filtros.historicas === "true"}
+                        checked={filtros.historicas === true}
                         onChange={(e) => setFiltros({
                             ...filtros,
-                            historicas: e.target.checked ? "true" : "false"
+                            historicas: e.target.checked ? true : false
                         })}
                     />
                     Incidencias históricas
@@ -97,10 +99,10 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
                 >
                     <input
                         type="checkbox"
-                        checked={filtros.propias === "true"}
+                        checked={filtros.propias === true}
                         onChange={(e) => setFiltros({
                             ...filtros,
-                            propias: e.target.checked ? "true" : "false"
+                            propias: e.target.checked ? true : false
                         })}
                     />
                     Mis incidencias
@@ -168,7 +170,7 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
                     marginTop: "8px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "6ps"
+                    gap: "6px"
                 }}
             >
                 {["nueva", "validada", "en proceso", "resuelta"].map(estado => (
@@ -237,7 +239,11 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
                 >
                     <button
                         onClick={pedirUbicacion}
-                        style={{background: "orange"}}
+                        style={{
+                            background: "orange",
+                            fontWeight: "bold",
+                            fontSize: "12px"
+                        }}
                     >
                         Usar mi ubicación
                     </button>

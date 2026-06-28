@@ -30,14 +30,14 @@ function MapaIncidencias() {
 
     const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
     const [filtros, setFiltros] = useState({
-        votos: "false",
-        historicas: "false",
+        votos: false,
+        historicas: false,
         fecha: "0",
         estado: [],
         proximidad: 500,
         proximidadIndice: 0,
         proximidadActivada: false,
-        propias: "false"
+        propias: false
     });
     const [ubicacionUsuario, setUbicacionUsuario] = useState(null);
 
@@ -99,9 +99,6 @@ function MapaIncidencias() {
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
     useEffect(() => {
-        if (!ubicacionUsuario) {
-            return;
-        }
         cargarIncidencias();
     }, [filtros, ubicacionUsuario]);
 
@@ -196,6 +193,7 @@ function MapaIncidencias() {
                 filtros={filtros}
                 setFiltros={setFiltros}
                 pedirUbicacion={pedirUbicacion}
+                mostrarVotos={false}
             />
             
             {incidenciaSeleccionada && (

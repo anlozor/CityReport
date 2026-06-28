@@ -44,7 +44,7 @@ const getIncidencias = async (req, res) => {
             const estadosArray = Array.isArray(estado) ? estado : [estado];
             // Para evitar problemas con los índices, utilizamos el número de parámetros que ya tenemos en values 
             // para asignar el número correcto al parámetro de la query
-            where.push(`incidencia.estado_nombre = ANY($${values.length + 1})`);
+            where.push(`incidencia.estado_nombre = ANY($${values.length + 1}::text[])`);
             values.push(estadosArray);
         }
 

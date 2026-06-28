@@ -103,7 +103,8 @@ function RegistroNuevoUsuario() {
                             border: errores.nombre ? "2px solid red" : "1px solid #ccc",
                             outline: "none",
                             padding: "8px",
-                            borderRadius: "6px"
+                            borderRadius: "6px",
+                            fontSize: "16px"
                         }}
                     />
                     <label>Email<span style={{color: "red"}}>*</span></label>
@@ -115,7 +116,8 @@ function RegistroNuevoUsuario() {
                             border: errores.email ? "2px solid red" : "1px solid #ccc",
                             outline: "none",
                             padding: "8px",
-                            borderRadius: "6px"
+                            borderRadius: "6px",
+                            fontSize: "16px"
                         }}
                     />
                     <label>Contraseña<span style={{color: "red"}}>*</span></label>
@@ -128,7 +130,8 @@ function RegistroNuevoUsuario() {
                             border: errores.contraseña ? "2px solid red" : "1px solid #ccc",
                             outline: "none",
                             padding: "8px",
-                            borderRadius: "6px"
+                            borderRadius: "6px",
+                            fontSize: "16px"
                         }}
                     />
                     <label>Alias</label>
@@ -139,10 +142,24 @@ function RegistroNuevoUsuario() {
                             border: "1px solid #ccc",
                             outline: "none",
                             padding: "8px",
-                            borderRadius: "6px"
+                            borderRadius: "6px",
+                            fontSize: "16px"
                         }}
                     />
-                    <button onClick={handleSubmit}>Registrarse</button>
+                    <button 
+                        onClick={handleSubmit}
+                        style={{
+                            background: "orange",
+                            border: "none",
+                            padding: "10px 14px",
+                            borderRadius: "10px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            fontSize: "14px"
+                        }}
+                    >
+                        Registrarse
+                    </button>
                 </form>
             </div>
         </div>
