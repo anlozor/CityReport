@@ -2,16 +2,16 @@ export async function getIncidencias(filtros = {}) {
     const token = localStorage.getItem("token");
     const params = new URLSearchParams();
 
-    if (filtros.votos) {
+    if (filtros.votos === true) {
         params.append("votos", "true");
     }
-    if (filtros.historicas) {
+    if (filtros.historicas === true) {
         params.append("historicas", "true");
     }
     if (filtros.fecha) {
         params.append("fecha", filtros.fecha);
     }
-    if (filtros.propias) {
+    if (filtros.propias === true) {
         params.append("propias", "true");
     }
     if (filtros.estado?.length > 0) {

@@ -50,14 +50,11 @@ export default function ListadoIncidencias({onVerDetalles, onActualizarVoto}) {
         }
     };
 
-    useEffect(() => {
-        cargarIncidencias();
-    }, []);
+    // useEffect(() => {
+    //     cargarIncidencias();
+    // }, []);
 
     useEffect(() => {
-        if (!ubicacionUsuario) {
-            return;
-        }
         cargarIncidencias();
     }, [filtros, ubicacionUsuario]);
 

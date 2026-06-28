@@ -16,6 +16,7 @@ import SolicitarGestor from "../pages/SolicitarGestor";
 import EstadoSolicitud from "../pages/EstadoSolicitud";
 import HomeGestor from "../pages/HomeGestor";
 import InfoSolicitudGestor from "../pages/InfoSolicitudGestor";
+import MenuHamburguesaGestor from "../layouts/MenuHamburguesaGestor";
 
 function AppRouter(){
     return (
@@ -68,11 +69,14 @@ function AppRouter(){
                     element={<RestableerContraseña/>}
                 />
 
-
-                <Route
-                    path="/home-gestor"
-                    element={<HomeGestor/>}
-                />
+                <Route element={<MenuHamburguesaGestor/>}>
+                    <Route
+                        path="/home-gestor"
+                        element={<HomeGestor/>}
+                    />
+                    
+                </Route>
+                
                 <Route
                     path="/gestion/incidencias/:id"
                     element={<InfoIncidencia/>}
