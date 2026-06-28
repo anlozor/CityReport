@@ -332,7 +332,7 @@ function HomeGestor() {
                 </section>
             )}
 
-            {rold_id === 1 && solicitudesNuevas.length > 0 && (
+            {rold_id === 1 && (
                 <section
                     style={{
                         background: "white",

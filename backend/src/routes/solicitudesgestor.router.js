@@ -290,12 +290,12 @@ router.patch('/:id/aceptar', auth, usuarioNoBloqueado, autorizarRol(1, 2), async
         return res.status(400).json({
             mensaje: 'La solicitud ya ha sido rechazada'});
     }
-    if (existe.rows[0].estado === 'Aceptada') {
+    if (existe.rows[0].estado === 'Aprobada') {
         return res.status(400).json({
             mensaje: 'La solicitud ya ha sido aceptada'});
     }
     // Marcamos estado = Aceptada y rellenamos los campos correspondientes
-    const result = await pool.query(`UPDATE solicitud_gestor SET estado = 'Aceptada', fecha_resolucion = CURRENT_DATE, 
+    const result = await pool.query(`UPDATE solicitud_gestor SET estado = 'Aprobada', fecha_resolucion = CURRENT_DATE, 
         gestor_id = $1 WHERE id_solicitud = $2`, [req.usuario.idGestor, id]);
 
     res.status(200).json({

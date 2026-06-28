@@ -15,6 +15,7 @@ import NuevaIncidenciaPagina from "../pages/NuevaIncidenciaPagina";
 import SolicitarGestor from "../pages/SolicitarGestor";
 import EstadoSolicitud from "../pages/EstadoSolicitud";
 import HomeGestor from "../pages/HomeGestor";
+import InfoSolicitudGestor from "../pages/InfoSolicitudGestor";
 
 function AppRouter(){
     return (
@@ -75,6 +76,10 @@ function AppRouter(){
                 <Route
                     path="/gestion/incidencias/:id"
                     element={<InfoIncidencia/>}
+                />
+                <Route
+                    path="/gestion/solicitud/:id"
+                    element={<InfoSolicitudGestor/>}
                 />
 
             </Routes>
