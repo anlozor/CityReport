@@ -17,6 +17,7 @@ import EstadoSolicitud from "../pages/EstadoSolicitud";
 import HomeGestor from "../pages/HomeGestor";
 import InfoSolicitudGestor from "../pages/InfoSolicitudGestor";
 import MenuHamburguesaGestor from "../layouts/MenuHamburguesaGestor";
+import ActivarGestor from "../pages/ActivarGestor";
 
 function AppRouter(){
     return (
@@ -84,6 +85,10 @@ function AppRouter(){
                 <Route
                     path="/gestion/solicitud/:id"
                     element={<InfoSolicitudGestor/>}
+                />
+                <Route
+                    path="/activar-gestor"
+                    element={<ActivarGestor/>}
                 />
 
             </Routes>

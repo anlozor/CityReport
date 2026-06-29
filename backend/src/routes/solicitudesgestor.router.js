@@ -253,7 +253,7 @@ router.patch('/:id/rechazar', auth, usuarioNoBloqueado, autorizarRol(1, 2), asyn
             return res.status(400).json({
                 mensaje: 'La solicitud ya ha sido rechazada'});
         }
-        if (existe.rows[0].estado === 'Aceptada') {
+        if (existe.rows[0].estado === 'Aprobada') {
             return res.status(400).json({
                 mensaje: 'La solicitud ya ha sido aceptada'});
         }
@@ -310,7 +310,7 @@ router.patch('/:id/aceptar', auth, usuarioNoBloqueado, autorizarRol(1, 2), async
 });
 
 // POST -> reenviar correo con credenciales en caso de no haberlo recibido
-router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(3), async (req, res) => {
+router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
         // Leemos la solicitud de la que se quiere reenviar las credenciales
         const id = req.params.id;
@@ -327,7 +327,7 @@ router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(3), a
                 mensaje: 'No tienes permiso para acceder a esta solicitud'});
         }
         // Comprobamos que está aceptada
-        if (existe.rows[0].estado !== 'Aceptada') {
+        if (existe.rows[0].estado !== 'Aprobada') {
             return res.status(400).json({
                 mensaje: 'La solicitud no ha sido aceptada'});
         }
@@ -337,7 +337,7 @@ router.post('/:id/reenviar-correo', auth, usuarioNoBloqueado, autorizarRol(3), a
                 mensaje: 'La cuenta ya ha sido activada'});
         }
         // Reenviamos el correo
-        const enlace = 'http://localhost:3000/solicitudes-gestor/activar-gestor';
+        const enlace = 'http://localhost:5173/activar-gestor';
         await enviarCredencialesGestor(existe.rows[0].email, enlace, existe.rows[0].identificador_gestor, existe.rows[0].codigo_activacion);
 
         res.status(200).json({

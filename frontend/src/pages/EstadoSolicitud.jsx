@@ -122,7 +122,7 @@ function EstadoSolicitud() {
                 </div>
             )}
 
-            {solicitud.estado === "Aceptada" && (
+            {solicitud.estado === "Aprobada" && (
                 <div
                     style={{
                         marginTop: "20px",
@@ -153,10 +153,11 @@ function EstadoSolicitud() {
                                 textDecoration: "underline",
                                 cursor: "pointer",
                                 padding: 0,
-                                fontSize: "13px"
+                                fontSize: "18px",
+                                margin: "0 4px"
                             }}
                         >
-                            aquí 
+                            aquí  
                         </button>
                         para reenviar el correo
                     </p>

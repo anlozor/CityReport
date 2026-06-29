@@ -203,7 +203,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 SET identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
                 WHERE email = $5`, [idGestor, alias, rol, codigo_activacion, email]);
 
-            const enlace = 'http://localhost:3000/usuarios/activar-gestor';
+            const enlace = 'http://localhost:5173/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
 
             res.status(200).json({
@@ -218,7 +218,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
                 VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7) RETURNING *`, 
                 [nombre, email, rol, contraseñaHashed, idGestor, alias, codigo_activacion]);
 
-            const enlace = 'http://localhost:3000/usuarios/activar-gestor';
+            const enlace = 'http://localhost:5173/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
         
             res.status(201).json({

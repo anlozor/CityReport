@@ -103,3 +103,15 @@ export async function crearGestor(formGestor) {
 
     return {response, data};
 }
+
+export async function activarGestor(datos) {
+    const response = await fetch("http://localhost:3000/usuarios/verificar-activacion", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(datos)
+    });
+
+    const data = await response.json();
+
+    return {response, data};
+}

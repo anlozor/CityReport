@@ -19,12 +19,13 @@ async function enviarCredencialesGestor(destinatario, enlace, idGestor, codigo_a
         to: destinatario,
         subject:'Activación de cuenta de gestor',
         html: `<h2>Cuenta de gestor creada</h2>
-                <p>Tu cuenta de gestor ha sido creada correctamente.</p>
-                <p>A continuación tienes tus credenciales. A partir de ahora para iniciar sesión deberás hacerlo con el identificador de gestor:</p>
-                <p><strong>Identificador de gestor:</strong>${idGestor}</p>
-                <p><strong>Código de activación:</strong>${codigo_activacion}</p>
-                <p>Para activar tu cuenta accede al siguiente enlace:</p>
-                <a href="${enlace}">Activar cuenta</a>`
+                <p style={{fontSize: "13px"}}>Tu cuenta de gestor ha sido creada correctamente.</p>
+                <p style={{fontSize: "13px"}}>A continuación tienes tu identificador de gestor, que se te ha asignado automáticamente, y el código de activación:</p>
+                <p style={{fontSize: "13px"}}><strong>Identificador de gestor:</strong> ${idGestor}</p>
+                <p style={{fontSize: "13px"}}><strong>Código de activación:</strong> ${codigo_activacion}</p>
+                <p style={{fontSize: "13px"}}>Para activar tu cuenta accede al siguiente enlace e introduce tu identificador de gestor y el código de activación:</p>
+                <a href="${enlace}" style={{fontSize: "13px"}}>Activar cuenta</a>
+                <p style={{fontSize: "13px"}}>Para iniciar sesión las siguientes veces, continúa haciéndolo con tu correo y la contraseña nueva que establezcas.</p>`
     });
 }
 
