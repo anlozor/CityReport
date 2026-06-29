@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { restablecerContraseña } from "../services/loginService";
+import { sacarRoldelToken } from "../services/despiezarTokenService";
 
 export default function RestableerContraseña() {
     const [contraseña1, setContraseña1] = useState("");
@@ -10,7 +11,8 @@ export default function RestableerContraseña() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    const token = searchParams.get("token");
+    const token = localStorage.getItem("tokenActivacion");
+    const rol_id = Number(sacarRoldelToken());
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,9 +21,13 @@ export default function RestableerContraseña() {
             const data = await restablecerContraseña(token, contraseña1, contraseña2);
             toast.success(data.mensaje);
             localStorage.setItem("token", data.token);
-            setTimeout(() => {
+
+            if (rol_id === 1 || rol_id === 2) {
+                navigate("/home-gestor");   
+            } else {
                 navigate("/mapa");
-            }, 1000);
+            }
+
         } catch (error) {
             toast.error(error.message);
         }
