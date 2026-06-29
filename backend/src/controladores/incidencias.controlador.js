@@ -119,12 +119,6 @@ const getIncidencias = async (req, res) => {
             query += ' ORDER BY incidencia.fecha_creacion DESC';
         }
 
-
-        console.log("VALUES:", values);
-console.log("QUERY:", query);
-console.log("REQ QUERY:", req.query);
-console.log("USER:", req.usuario);
-
         // Hacemos la consulta dependiendo de si tenemos parámetros o no
         let result;
         if (values.length > 0) {

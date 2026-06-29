@@ -301,8 +301,8 @@ function InfoSolicitudGestor() {
                                 fontSize: "16px"
                             }}
                         >
-                            <option value={1}>Gestor</option>
-                            <option value={2}>Gestor avanzado</option>
+                            <option value={1}>Gestor avanzado</option>
+                            <option value={2}>Gestor</option>
                         </select>
                         
                         <div

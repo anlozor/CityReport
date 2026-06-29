@@ -34,7 +34,7 @@ function Login() {
                 console.log("Token guardado");
 
                 const rol_id = sacarRoldelToken();
-                if (rol_id === 1 || rol_id === 2) {
+                if ((rol_id === 1 || rol_id === 2) && data.codigo_usado === true) {
                     navigate("/home-gestor");
                 } else {
                     navigate("/mapa");

@@ -150,11 +150,12 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
     try {
         // Leemos del body los campos necesarios para crear el usuario, incluido el rol (1 o 2)
         const {nombre, email, rol_id} = req.body;
+        const rol = Number(rol_id);
         // Comprobamos que no falta ninguno
         if (!nombre || !email || !rol_id) {
             return res.status(400).json({
                 mensaje: 'Faltan campos obligatorios'});
-        } else if (rol_id !== 1 && rol_id !== 2) {
+        } else if (rol !== 1 && rol !== 2) {
             return res.status(400).json({
                 mensaje: 'El rol debe ser gestor o gestor avanzado'});
         }
@@ -200,7 +201,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
         if (existe.rows.length > 0) {
             const resultUsuario = await pool.query(`UPDATE usuario 
                 SET identificador_gestor = $1, alias = $2, rol_id = $3, codigo_activacion = $4 
-                WHERE email = $5`, [idGestor, alias, rol_id, codigo_activacion, email]);
+                WHERE email = $5`, [idGestor, alias, rol, codigo_activacion, email]);
 
             const enlace = 'http://localhost:3000/usuarios/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
@@ -215,7 +216,7 @@ router.post('/gestores', auth, usuarioNoBloqueado, autorizarRol(1), async (req, 
             const result = await pool.query(`INSERT INTO usuario 
                 (nombre, email, rol_id, fecha_registro, contraseña, identificador_gestor, alias, codigo_activacion)
                 VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7) RETURNING *`, 
-                [nombre, email, rol_id, contraseñaHashed, idGestor, alias, codigo_activacion]);
+                [nombre, email, rol, contraseñaHashed, idGestor, alias, codigo_activacion]);
 
             const enlace = 'http://localhost:3000/usuarios/activar-gestor';
             await enviarCredencialesGestor(email, enlace, idGestor, codigo_activacion);
@@ -419,7 +420,8 @@ router.post('/login', async (req, res) => {
         // Mandamos la respuesta
         res.json({
             mensaje: 'Login correcto',
-            token
+            token,
+            codigo_usado: usuario.codigo_usado
         });
     } catch (error) {
         console.error('Error al hacer login:', error);
