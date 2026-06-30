@@ -5,10 +5,45 @@ import { toast } from 'react-toastify';
 import { votarIncidencia } from '../services/votosService';
 import { sacarUsuariodelToken } from '../services/despiezarTokenService';
 import { getIncidenciaId } from '../services/incidenciasService';
-import { L } from 'leaflet';
+import L from 'leaflet';
 import { useMapEvents } from "react-leaflet";
 import { obtenerDireccion } from '../services/nominatimService';
 import NuevaIncidencia from '../pages/NuevaIncidencia';
+
+const iconoNormalGestor = L.divIcon({
+    className: "icono-incidencia-normal",
+    html: `
+        <div style="
+            width: 14px;
+            height: 14px;
+            background: #ff3b3b;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 6px rgba(0,0,0,0.4);
+        "></div>
+    `,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+});
+
+const iconoSeleccionado = L.divIcon({
+    className: "icono-incidencia-seleccionada",
+    html: `
+        <div style="
+            width: 18px;
+            height: 18px;
+            background: #00c853;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            transform: rotate(45deg);
+        "></div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+});
+
+const iconoAzulDefault = new L.Icon.Default();
 
 function FixMapSize({incidencias}) {
     const map = useMap();
@@ -19,9 +54,13 @@ function FixMapSize({incidencias}) {
     return null;
 }
 
-function HandlerClickMapa({setPosicionNueva, setNuevaIncidencia}) {
+function HandlerClickMapa({setPosicionNueva, setNuevaIncidencia, modoDocumento}) {
     useMapEvents({
         click: async (e) => {
+            if (modoDocumento) {
+                return;
+            }
+
             const {lat, lng} = e.latlng;
             let direccion = "";
             try {
@@ -50,7 +89,7 @@ function CentrarMapa({ubicacionUsuario}) {
     return null;
 }
 
-export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia, onIncidenciaCreada, ubicacionUsuario}) {
+export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVoto, onNuevaIncidencia, nuevaIncidencia, setNuevaIncidencia, onIncidenciaCreada, ubicacionUsuario, modo, incidenciasSeleccionadas, modoDocumento}) {
     const centro = ubicacionUsuario ? [ubicacionUsuario.lat, ubicacionUsuario.lon] : [40.4168, -3.7038];
     const id_usuario = sacarUsuariodelToken();
 
@@ -95,6 +134,12 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
         }
     };
 
+    useEffect(() => {
+        if (modoDocumento) {
+            setPosicionNueva(null);
+            setNuevaIncidencia?.(null);
+        }
+    }, [modoDocumento]);
 
     return (
         <MapContainer
@@ -114,51 +159,69 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
             <HandlerClickMapa
                 setPosicionNueva={setPosicionNueva}
                 setNuevaIncidencia={setNuevaIncidencia}
+                modoDocumento={modoDocumento}
             />
 
-            {Array.isArray(incidencias) && incidencias.map((inc) => (
-                <Marker
-                    key={inc.id_incidencia}
-                    position={[inc.latitud, inc.longitud]}
-                >
-                    <Popup minWidth={250} maxWidth={400}>
-                        <div
-                            style={{
-                                width: "300px",
-                                padding: "5px"
-                            }}
-                        >
-                            <h3>{inc.titulo}</h3>
-                            <p>{inc.descripcion}</p>
-                            <p><strong>Categoría:</strong> {inc.categoria_nombre}</p>
-                            <p><strong>Votos:</strong> {inc.num_votos}</p>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "8px",
-                                    justifyContent: "center",
-                                    marginTop: "10px"
-                                }}
-                            >
-                                <button
-                                    onClick={() => handleVotar(inc.id_incidencia)}
-                                    disabled={votosUsuario.includes(inc.id_incidencia)}
-                                    style={{ background: "orange" }}
-                                >
-                                    {votosUsuario.includes(inc.id_incidencia) ? "Votado" : "Votar"}
-                                </button>
+            {Array.isArray(incidencias) && incidencias.map((inc) => {
+                const estaSeleccionada = incidenciasSeleccionadas?.some((i) => i.id_incidencia === inc.id_incidencia);
 
-                                <button
-                                    onClick={() => handleVerDetalles(inc.id_incidencia)}
-                                    style={{ background: "orange" }}
+                return (
+                    <Marker
+                        key={inc.id_incidencia}
+                        position={[inc.latitud, inc.longitud]}
+                        icon={modoDocumento ? (estaSeleccionada ? iconoSeleccionado : iconoNormalGestor) : iconoAzulDefault}
+                        eventHandlers={{
+                            click: () => {
+                                if (modo === "gestor" && onVerDetalles) {
+                                    onVerDetalles(inc);
+                                }
+                            }
+                        }}
+                    >
+                        {modo === "usuario" && (
+                            <Popup minWidth={250} maxWidth={400}>
+                                <div
+                                    style={{
+                                        width: "300px",
+                                        padding: "5px"
+                                    }}
                                 >
-                                    Ver detalles de la incidencia
-                                </button>
-                            </div>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
+                                    <h3>{inc.titulo}</h3>
+                                    <p>{inc.descripcion}</p>
+                                    <p><strong>Categoría:</strong> {inc.categoria_nombre}</p>
+                                    <p><strong>Votos:</strong> {inc.num_votos}</p>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            gap: "8px",
+                                            justifyContent: "center",
+                                            marginTop: "10px"
+                                        }}
+                                    >
+                                        <button
+                                            onClick={() => handleVotar(inc.id_incidencia)}
+                                            disabled={votosUsuario.includes(inc.id_incidencia)}
+                                            style={{ background: "orange" }}
+                                        >
+                                            {votosUsuario.includes(inc.id_incidencia) ? "Votado" : "Votar"}
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                handleVerDetalles(inc.id_incidencia)
+                                            }}
+                                            style={{ background: "orange" }}
+                                        >
+                                            Ver detalles de la incidencia
+                                        </button>
+                                    </div>
+                                </div>
+                            </Popup>
+                        )}
+                    </Marker>
+                );
+                
+            })}
             {posicionNueva && (
                 <div
                     style={{

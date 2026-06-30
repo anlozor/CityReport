@@ -119,7 +119,7 @@ function HomeGestor() {
                 <button
                     onClick={() => {
                         if (rold_id === 2) {
-                            navigate("/mapa");
+                            navigate("/mapa-gestor");
                         } else if (rold_id === 1) {
                             navigate("/home-gestor-avanzado");
                         }

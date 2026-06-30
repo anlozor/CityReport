@@ -18,6 +18,7 @@ import HomeGestor from "../pages/HomeGestor";
 import InfoSolicitudGestor from "../pages/InfoSolicitudGestor";
 import MenuHamburguesaGestor from "../layouts/MenuHamburguesaGestor";
 import ActivarGestor from "../pages/ActivarGestor";
+import MapaGestor from "../pages/MapaGestor";
 
 function AppRouter(){
     return (
@@ -75,7 +76,11 @@ function AppRouter(){
                         path="/home-gestor"
                         element={<HomeGestor/>}
                     />
-                    
+                    <Route
+                        path="/mapa-gestor"
+                        element={<MapaGestor/>}
+                    />
+                   
                 </Route>
                 
                 <Route

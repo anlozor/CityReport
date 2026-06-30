@@ -29,6 +29,7 @@ const categoriasRouter = require("./routes/categorias.router");
 const cambiosEstadosRouter = require("./routes/cambiosestados.router");
 const incidenciasRouter = require("./routes/incidencias.router");
 const solicitudesGestorRouter = require("./routes/solicitudesgestor.router");
+const documentosRouter = require("./routes/documentos.router");
 
 // 2. Servidor
 const app = express();
@@ -48,6 +49,7 @@ app.use('/categorias', categoriasRouter);
 app.use('/cambiosestados', cambiosEstadosRouter);
 app.use('/incidencias', incidenciasRouter);
 app.use('/solicitudes-gestor', solicitudesGestorRouter);
+app.use('/documentos', documentosRouter);
 
 // 4. Conexión a BBDD
 

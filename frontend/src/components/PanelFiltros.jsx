@@ -1,7 +1,11 @@
-export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicacion, mostrarVotos = true}) {
+import { useEffect, useRef } from "react";
+
+export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicacion, mostrarVotos = true, setAbierto}) {
     if (!abierto) {
         return null;
     }
+
+    const panelRef = useRef(null);
 
     const cambiarEstado = (estado) => {
         if (filtros.estado.includes(estado)) {
@@ -22,8 +26,25 @@ export default function PanelFiltros({abierto, filtros, setFiltros, pedirUbicaci
         { label: "1 km", value: 1000 },
         { label: "5 km", value: 5000 }];
 
+    useEffect(() => {
+        if (!abierto) return;
+
+        const handleClickOutside = (event) => {
+            if (panelRef.current && !panelRef.current.contains(event.target)){
+                setAbierto(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [abierto]);
+
     return (
         <div
+            ref={panelRef}
             style={{
                 position: "absolute",
                 top: "70px",

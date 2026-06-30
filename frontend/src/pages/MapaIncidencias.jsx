@@ -79,7 +79,6 @@ function MapaIncidencias() {
     };
 
     // Cada vez que se carga, se cargan las incidencias y se resetean los campos
-    useEffect(() => { cargarIncidencias();}, []);
     useEffect(() => {
         setTextoComentario("");
         setImagenComentario(null);
@@ -157,6 +156,7 @@ function MapaIncidencias() {
                     setNuevaIncidencia={setNuevaIncidencia}
                     onIncidenciaCreada={handleIncidenciaCreada}
                     ubicacionUsuario={ubicacionUsuario}
+                    
                 />
             )}
             {vista === "perfil" && (

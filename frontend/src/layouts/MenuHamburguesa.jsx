@@ -1,19 +1,37 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Outlet } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 function MenuHamburguesa({children}) {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const navigate = useNavigate();
-
     const location = useLocation();
+    const menuRef = useRef(null);
+
     const esMapa = location.pathname === "/mapa";
     const esLista = location.pathname === "/lista";
     const esPerfil = location.pathname === "/perfil";
     const esNuevaIncidencia = location.pathname === "/nueva-incidencia";
     const esSolicitudGestor = location.pathname === "/solicitar-gestor";
     const esEstadoSolicitud = location.pathname === "/estado-solicitud";
+
+    const ir = (ruta) => {
+        navigate(ruta);
+        setMenuAbierto(false); // cerrar al navegar
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)){
+                setMenuAbierto(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const menuItemStyle = {
         width: "100%",
@@ -32,6 +50,7 @@ function MenuHamburguesa({children}) {
             }}
         >
             <div
+                ref={menuRef}
                 className="menu-hamburguesa"
                 style={{
                     position: "absolute",
@@ -72,7 +91,7 @@ function MenuHamburguesa({children}) {
                         {!esPerfil && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/perfil")}
+                                onClick={() => ir("/perfil")}
                             >
                                 Mi perfil
                             </button>
@@ -81,7 +100,7 @@ function MenuHamburguesa({children}) {
                         {!esMapa && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/mapa")}
+                                onClick={() => ir("/mapa")}
                             >
                                 Ver mapa
                             </button>
@@ -89,7 +108,7 @@ function MenuHamburguesa({children}) {
                         {!esNuevaIncidencia && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/nueva-incidencia")}
+                                onClick={() => ir("/nueva-incidencia")}
                             >
                                 Crear nueva incidencia
                             </button>
@@ -97,7 +116,7 @@ function MenuHamburguesa({children}) {
                         {!esLista && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/lista")}
+                                onClick={() => ir("/lista")}
                             >
                                 Ver lista de incidencias
                             </button>
@@ -106,7 +125,7 @@ function MenuHamburguesa({children}) {
                         {!esSolicitudGestor && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/solicitar-gestor")}
+                                onClick={() => ir("/solicitar-gestor")}
                             >
                                 ¿Quieres ser gestor? Envía tu solicitud
                             </button>
@@ -114,7 +133,7 @@ function MenuHamburguesa({children}) {
                         {!esEstadoSolicitud && (
                             <button
                                 style={menuItemStyle}
-                                onClick={() => navigate("/estado-solicitud")}
+                                onClick={() => ir("/estado-solicitud")}
                             >
                                 Estado de mi solicitud
                             </button>
@@ -124,7 +143,7 @@ function MenuHamburguesa({children}) {
                             style={menuItemStyle}
                             onClick={() => {
                                 localStorage.removeItem("token");
-                                navigate("/");
+                                ir("/");
                             }}
                         >
                             Cerrar sesión
