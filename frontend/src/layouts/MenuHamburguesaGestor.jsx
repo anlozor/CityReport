@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import BusquedaGestores from "../components/BusquedaGestores";
+import { buscarGestores } from "../services/usuariosService";
 
 function MenuHamburguesaGestor() {
     const [menuAbierto, setMenuAbierto] = useState(false);
@@ -9,6 +11,15 @@ function MenuHamburguesaGestor() {
 
     const esHome = location.pathname === "/home-gestor";
     const esMapa = location.pathname === "/mapa-gestor";
+
+    const [buscarGestorAbierto, setBuscarGestorAbierto] = useState(false);
+    const [gestores, setGestores] = useState([]);
+
+    const [textoBusqueda, setTextoBusqueda] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const timeoutRef = useRef(null);
+    const controllerRef = useRef(null);
 
     const toggleMenu = () => {
         setMenuAbierto(prev => !prev);
@@ -32,6 +43,39 @@ function MenuHamburguesaGestor() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    useEffect(() => {
+        if (!buscarGestorAbierto) {
+            return;
+        }
+        if (!textoBusqueda) {
+            setGestores([]);
+            return;
+        }
+
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(async () => {
+            setLoading(true);
+            
+            if (controllerRef.current) {
+                controllerRef.current.abort();
+            }
+
+            const controller = new AbortController();
+            controllerRef.current = controller;
+
+            try {
+                const data = await buscarGestores(textoBusqueda, controller.signal);
+                setGestores(data);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        }, 300);
+    }, [textoBusqueda, buscarGestorAbierto]);
 
     const menuItemStyle = {
         width: "100%",
@@ -115,7 +159,7 @@ function MenuHamburguesaGestor() {
                         </button>
 
                         <button
-                            onClick={() => ir("/gestor/buscar")}
+                            onClick={() => setBuscarGestorAbierto(true)}
                             style={menuItemStyle}
                         >
                             Buscar gestor
@@ -134,6 +178,51 @@ function MenuHamburguesaGestor() {
                 )}
             </div>
             <Outlet />
+            <BusquedaGestores
+                open={buscarGestorAbierto}
+                onClose={() => setBuscarGestorAbierto(false)}
+            >
+                <h3>Buscar gestor</h3>
+
+                <p>A continuación puedes escribir parte del identificador.</p>
+                <p>Por ejemplo, si escribes 00, te mostrará todos los gestores que tengan como identificador "Gestor00XX", siendo X cualquier número</p>
+                <input
+                    placeholder="Escribe el identificador"
+                    value={textoBusqueda}
+                    onChange={(e) => setTextoBusqueda(e.target.value)}
+                    style={{
+                        width: "95%",
+                        padding: "8px",
+                        marginBottom: "10px"
+                    }}
+                />
+
+                {loading && <p>Cargando...</p>}
+
+                {!loading && gestores.length === 0 && textoBusqueda && (
+                    <p>No hay resultados</p>
+                )}
+
+                {gestores.map(g => (
+                        <div
+                            key={g.identificador_gestor}
+                            onClick={() => {
+                                console.log("Seleccionado:", g);
+                                setBuscarGestorAbierto(false);
+                                setTextoBusqueda("");
+                            }}
+                            style={{
+                                padding: "8px",
+                                borderBottom: "1px solid #eee",
+                                cursor: "pointer"
+                            }}
+                        >
+                            <b>{g.identificador_gestor}</b>
+                            <div>{g.nombre}</div>
+                            <small>{g.email}</small>
+                        </div>
+                ))}
+            </BusquedaGestores>
         </div>
     );
 }

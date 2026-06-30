@@ -55,6 +55,42 @@ router.get('/perfil', auth, usuarioNoBloqueado, async (req, res) => {
     }
 });
 
+// GET -> obtener listado de gestores
+// Los gestores pueden buscar a otros gestores mediante nombre o identificador_gestor para poder obtener su email para contactar entre ellos
+router.get('/gestores', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
+    try {
+        // Leemos el identificador que el usuario va escribiendo
+        const {identificador} = req.query;
+
+        // Comprobamos que ha escrito algo
+        if (!identificador) {
+            return res.status(400).json({
+                mensaje: "Debes indicar un identificador de gestor"
+            });
+        }
+
+        // Obtenemos los gestores
+        const gestores = await pool.query(`SELECT identificador_gestor, nombre, email FROM usuario WHERE rol_id IN (1, 2)
+            AND identificador_gestor IS NOT NULL 
+            AND LOWER(REPLACE(identificador_gestor, 'Gestor', '')) ILIKE LOWER($1)
+            ORDER BY identificador_gestor`, [`%${identificador}%`]);
+
+        if (gestores.rows.length === 0) {
+            return res.status(200).json({
+                mensaje: "No se han encontrado gestores"
+            });
+        }
+
+        res.status(200).json(gestores.rows);
+        
+    } catch (error) {
+        console.error("Error al obtener los gestores:", error);
+        res.status(500).json({
+            mensaje: "Error al obtener los gestores"
+        });
+    } 
+});
+
 // GET -> obtener un usuario concreto
 // Gestores pueden buscar a cualquier usuario, los usuarios normales pueden ver su propio perfil
 router.get('/:id', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
