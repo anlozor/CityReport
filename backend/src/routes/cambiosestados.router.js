@@ -14,10 +14,10 @@ router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) =
     try {
         // Primero obtenemos los cambios de estado
         const result = await pool.query(`SELECT cambio_estado.id_cambio_estado, cambio_estado.incidencia_id, 
-            cambio_estado.fecha_cambio, estado_incidencia.nombre AS estado, usuario.nombre AS usuario
+            cambio_estado.fecha_cambio, cambio_estado.estado_nombre AS estado, usuario.nombre AS usuario, incidencia.titulo
             FROM cambio_estado
-            JOIN estado_incidencia ON cambio_estado.estado_id = estado_incidencia.id_estado
             JOIN usuario ON cambio_estado.usuario_id = usuario.id_usuario
+            JOIN incidencia ON cambio_estado.incidencia_id = incidencia.id_incidencia
             ORDER BY cambio_estado.fecha_cambio DESC`);
         // Luego enviamos la petición HTTP con el resultado
         res.status(200).json(result.rows);
@@ -53,9 +53,8 @@ router.get('/incidencia/:idIncidencia', auth, usuarioNoBloqueado, async (req, re
         }
         // Obtenemos los cambios de estado de la incidencia
         const result = await pool.query(`SELECT cambio_estado.id_cambio_estado, cambio_estado.incidencia_id, 
-            cambio_estado.fecha_cambio, estado_incidencia.nombre AS estado, usuario.nombre AS usuario
+            cambio_estado.fecha_cambio, cambio_estado.estado_nombre AS estado, usuario.nombre AS usuario
             FROM cambio_estado
-            JOIN estado_incidencia ON cambio_estado.estado_id = estado_incidencia.id_estado
             JOIN usuario ON cambio_estado.usuario_id = usuario.id_usuario
             WHERE cambio_estado.incidencia_id = $1
             ORDER BY cambio_estado.fecha_cambio DESC`, [idIncidencia]);

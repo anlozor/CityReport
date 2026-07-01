@@ -73,3 +73,15 @@ export async function getIncidenciasEliminadas() {
 
     return data;
 }
+
+export async function getCambiosEstado() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3000/cambiosestados", {
+        headers: {Authorization: `Bearer ${token}`}
+    });
+
+    const data = await response.json();
+
+    return data;
+}

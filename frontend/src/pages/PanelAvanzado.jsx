@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { getIncidenciasEliminadas, getIncidenciasCreadas, getIncidenciasPorCategoria,
-    getComentariosEliminados, getImagenesEliminadas, getUsuariosBloqueados } from "../services/gestorAvanzadoService";
+    getComentariosEliminados, getImagenesEliminadas, getUsuariosBloqueados, getCambiosEstado } from "../services/gestorAvanzadoService";
 import FiltroPeriodo from "../components/FiltroPeriodo";
 import GraficoIncidencias from "../components/GraficoIncidencias";
 import GraficoCategorias from "../components/GraficoCategorias";
 import TarjetasElimBloq from "../components/TarjetasElimBloq";
+import TablaCambiosEstados from "../components/TablaCambiosEstados";
 
 function obtenerTextoCentro(periodo) {
     const hoy = new Date();
@@ -33,17 +34,20 @@ function PanelAvanzado() {
     const [comentarios, setComentarios] = useState([]);
     const [imagenes, setImagenes] = useState([]);
 
+    const [cambiosEstados, setCambiosEstados] = useState([]);
+
     useEffect(() => {
         cargarDatos();
     }, [periodo]);
 
     const cargarDatos = async () => {
-        const [inc, cat, usu, com, img] = await Promise.all([
+        const [inc, cat, usu, com, img, cam] = await Promise.all([
             getIncidenciasCreadas(periodo),
             getIncidenciasPorCategoria(periodo),
             getUsuariosBloqueados(),
             getComentariosEliminados(),
-            getImagenesEliminadas()
+            getImagenesEliminadas(),
+            getCambiosEstado()
         ]);
 
         setIncidencias(inc);
@@ -51,6 +55,7 @@ function PanelAvanzado() {
         setUsuarios(usu);
         setComentarios(com);
         setImagenes(img);
+        setCambiosEstados(cam);
     };
 
     const incidenciasArregladas = incidencias.map(i => {
@@ -81,7 +86,17 @@ function PanelAvanzado() {
     return (
         <div style={{ padding: "20px" }}>
 
-            <h2>Panel avanzado</h2>
+            <h2
+                style={{
+                    margin: 0,
+                    fontSize: "32px",
+                    fontWeight: 700,
+                    letterSpacing: "-0.5px",
+                    color: "#2B2620"
+                }}
+            >
+                Panel avanzado
+            </h2>
 
             <FiltroPeriodo periodo={periodo} setPeriodo={setPeriodo} />
 
@@ -102,6 +117,9 @@ function PanelAvanzado() {
                 usuarios={usuarios}
                 comentarios={comentarios}
                 imagenes={imagenes}
+            />
+            <TablaCambiosEstados
+                cambios={cambiosEstados}
             />
 
         </div>
