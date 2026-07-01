@@ -96,6 +96,7 @@ function InfoIncidencia() {
     };
 
     const handleGuardarCambios = async () => {
+        console.log("Enviando al backend:", incidenciaNueva);
       try {
         //const categoriaData = await crearCategoria(incidenciaNueva.categoria_nombre)
         const {response, data} = await patchEditarIncidencia(incidenciaOriginal.id_incidencia, incidenciaNueva);
@@ -259,6 +260,13 @@ function InfoIncidencia() {
         if (incidenciaNueva?.[campo] !== undefined) {
             return incidenciaNueva[campo];
         }
+        if (campo === "categoria") {
+            return incidenciaOriginal?.categoria_nombre;
+        }
+
+        if (campo === "estado") {
+            return incidenciaOriginal?.estado_nombre;
+        }
         return incidenciaOriginal?.[campo];
     };
 
@@ -326,7 +334,7 @@ function InfoIncidencia() {
                         >
                             <b>Categoría:</b>
                             <select
-                                value={get("categoria_nombre")}
+                                value={incidenciaNueva?.categoria ?? incidenciaOriginal.categoria_nombre}
                                 onChange={handleCambiarCategoria}  
                                 style={{
                                     fontSize: "16px"
@@ -359,7 +367,7 @@ function InfoIncidencia() {
                                 whiteSpace: "nowrap"
                             }}
                         >
-                            <b>Categoría:</b> {get("categoria_nombre")}
+                            <b>Categoría:</b> {get("categoria")}
                         </span>
                     )}
                     
@@ -408,7 +416,7 @@ function InfoIncidencia() {
                                         Cancelar
                                     </button>
                                     <button
-                                        onClick={handleCambiarCategoria}
+                                        onClick={handleCrearCategoria}
                                     >
                                         Crear
                                     </button>
@@ -539,7 +547,7 @@ function InfoIncidencia() {
                         >
                             <b>Estado:</b>
                             <select
-                                value={get("estado_nombre")}
+                                value={incidenciaNueva?.estado ?? incidenciaOriginal.estado_nombre}
                                 onChange={(e) => setIncidenciaNueva( prev => ({
                                     ...prev,
                                     estado: e.target.value
@@ -579,11 +587,11 @@ function InfoIncidencia() {
                                 borderRadius: "8px"
                             }}
                         >
-                            <b>Estado:</b> {get("estado_nombre")}
+                            <b>Estado:</b> {get("estado")}
                         </div>
                     )}
 
-                    {get("estado") === "Resuleta" && (
+                    {get("estado") === "Resuelta" && (
                         <div>
                             <label>
                                 <b>Descripción de la resolución:</b>

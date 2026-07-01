@@ -140,11 +140,18 @@ const getIncidencias = async (req, res) => {
 const getIncidenciasEliminadas = async (req, res) => {
     try {
         // Como solo va a ser ordenado por fecha de eliminación de la más reciente a la más antigua y no va a haber filtros, hacemos directamente la consulta
-        const result = await pool.query(`SELECT * FROM incidencia WHERE esta_eliminada = true ORDER BY fecha_eliminacion DESC`);
+        const result = await pool.query(`SELECT incidencia.id_incidencia, incidencia.titulo, incidencia.descripcion, incidencia.fecha_eliminacion,
+            usuario.identificador_gestor
+            FROM incidencia 
+            LEFT JOIN usuario ON incidencia.eliminado_por = usuario.id_usuario
+            WHERE incidencia.esta_eliminada = true
+            ORDER BY incidencia.fecha_eliminacion DESC`);
         if (result.rows.length === 0) {
             return res.status(404).json({
                 mensaje: 'No se han encontrado incidencias eliminadas'});
         }
+
+        res.status(200).json(result.rows);
         
     } catch (error) {
         console.error('Error al cargar las incidencias eliminadas:', error);

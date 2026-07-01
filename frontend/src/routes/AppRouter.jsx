@@ -19,6 +19,7 @@ import InfoSolicitudGestor from "../pages/InfoSolicitudGestor";
 import MenuHamburguesaGestor from "../layouts/MenuHamburguesaGestor";
 import ActivarGestor from "../pages/ActivarGestor";
 import MapaGestor from "../pages/MapaGestor";
+import PanelAvanzado from "../pages/PanelAvanzado";
 
 function AppRouter(){
     return (
@@ -94,6 +95,11 @@ function AppRouter(){
                 <Route
                     path="/activar-gestor"
                     element={<ActivarGestor/>}
+                />
+
+                <Route
+                    path="/home-gestor-avanzado"
+                    element={<PanelAvanzado/>}
                 />
 
             </Routes>

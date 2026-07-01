@@ -19,7 +19,9 @@ export async function crearCategoria(nombre) {
 
     const response = await fetch("http://localhost:3000/categorias", {
         method: "POST",
-        headers: {Authorization: `Bearer ${token}`},
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`},
         body: JSON.stringify({nombre})
     });
 
