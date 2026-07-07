@@ -156,7 +156,7 @@ function MapaIncidencias() {
                     setNuevaIncidencia={setNuevaIncidencia}
                     onIncidenciaCreada={handleIncidenciaCreada}
                     ubicacionUsuario={ubicacionUsuario}
-                    
+                    modo="usuario"
                 />
             )}
             {vista === "perfil" && (
