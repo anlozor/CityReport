@@ -9,6 +9,11 @@ import L from 'leaflet';
 import { useMapEvents } from "react-leaflet";
 import { obtenerDireccion } from '../services/nominatimService';
 import NuevaIncidencia from '../pages/NuevaIncidencia';
+import markerBlue from '../assets/marker-icon-blue.png';
+import markerYellow from '../assets/marker-icon-yellow.png';
+import markerRed from '../assets/marker-icon-red.png';
+import markerGreen from '../assets/marker-icon-green.png';
+import markerShadow from '../assets/marker-shadow.png';
 
 const iconoNormalGestor = L.divIcon({
     className: "icono-incidencia-normal",
@@ -43,7 +48,52 @@ const iconoSeleccionado = L.divIcon({
     iconAnchor: [9, 9]
 });
 
-const iconoAzulDefault = new L.Icon.Default();
+const opcionesIcono = {
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+};
+
+const iconoAzul = new L.Icon({
+    iconUrl: markerBlue,
+    ...opcionesIcono
+});
+
+const iconoAmarillo = new L.Icon({
+    iconUrl: markerYellow,
+    ...opcionesIcono
+});
+
+const iconoRojo = new L.Icon({
+    iconUrl: markerRed,
+    ...opcionesIcono
+});
+
+const iconoVerde = new L.Icon({
+    iconUrl: markerGreen,
+    ...opcionesIcono
+});
+
+function obtenerIconoIncidencia(prioridad, estado) {
+    // Si está resuelta, siempre verde
+    if (estado?.toLowerCase() === "resuelta") {
+        return iconoVerde;
+    }
+
+    switch (Number(prioridad)) {
+        case 3:
+            return iconoRojo;
+
+        case 2:
+            return iconoAmarillo;
+
+        case 1:
+        default:
+            return iconoAzul;
+    }
+}
 
 function FixMapSize({incidencias}) {
     const map = useMap();
@@ -169,7 +219,7 @@ export default function MapaLeaflet({incidencias, onVerDetalles, onActualizarVot
                     <Marker
                         key={inc.id_incidencia}
                         position={[inc.latitud, inc.longitud]}
-                        icon={modoDocumento ? (estaSeleccionada ? iconoSeleccionado : iconoNormalGestor) : iconoAzulDefault}
+                        icon={modoDocumento ? (estaSeleccionada ? iconoSeleccionado : iconoNormalGestor) : obtenerIconoIncidencia(inc.prioridad, inc.estado_nombre)}
                         eventHandlers={{
                             click: () => {
                                 if (modo === "gestor" && onVerDetalles) {
