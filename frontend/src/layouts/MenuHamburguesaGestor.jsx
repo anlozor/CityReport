@@ -12,6 +12,7 @@ function MenuHamburguesaGestor() {
 
     const esHome = location.pathname === "/home-gestor";
     const esMapa = location.pathname === "/mapa-gestor";
+    const esPanelAvanzado = location.pathname === "/home-gestor-avanzado";
 
     const [buscarGestorAbierto, setBuscarGestorAbierto] = useState(false);
     const [gestores, setGestores] = useState([]);
@@ -174,6 +175,14 @@ function MenuHamburguesaGestor() {
                                 style={menuItemStyle}
                             >
                                 Lista de usuarios
+                            </button>
+                        )}
+                        {rol === 1 && !esPanelAvanzado && (
+                            <button
+                                onClick={() => ir("/home-gestor-avanzado")}
+                                style={menuItemStyle}
+                            >
+                                Panel avanzado
                             </button>
                         )}
 
