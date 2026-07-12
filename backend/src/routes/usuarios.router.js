@@ -18,8 +18,18 @@ const router = express.Router();
 // GET -> obtener listado de usuarios
 router.get('/', auth, usuarioNoBloqueado, autorizarRol(1, 2), async (req, res) => {
     try {
-        // Primero la query
-        const result = await pool.query(`SELECT * FROM usuario`);
+        // Leemos lo que queremos buscar
+        const {buscar} = req.query;
+        // Comprobamos si ha escrito algo, sino mostramos lista vacía
+        if (!buscar || buscar.trim() === "") {
+            return res.status(200).json([]);
+        }
+        // Hacemos la query
+        const result = await pool.query(`SELECT u.id_usuario, u.alias, u.nombre, u.esta_bloqueado, u.motivo_bloqueo, u.fecha_bloqueo, gestor.nombre AS gestor
+            FROM usuario u
+            LEFT JOIN usuario gestor ON u.bloqueado_por = gestor.id_usuario
+            WHERE (u.alias ILIKE $1 OR u.nombre ILIKE $1) AND u.rol_id = 3
+            ORDER BY u.alias`, [`%${buscar}%`]);
         // Estado de petición HTTP y resultado
         res.status(200).json(result.rows);
     } catch (error) {

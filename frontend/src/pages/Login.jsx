@@ -117,7 +117,7 @@ function Login() {
                         color: "#3b82f6",
                         cursor: "pointer",
                         textDecoration: "underline",
-                        fontSize: "13px"
+                        fontSize: "14px"
                     }}
                 >
                     ¿Has olvidado tu contraseña?
@@ -132,7 +132,7 @@ function Login() {
                         color: "#3b82f6",
                         cursor: "pointer",
                         textDecoration: "underline",
-                        fontSize: "13px"
+                        fontSize: "14px"
                     }}
                 >
                     ¿No tienes cuenta? Pincha aquí y regístrate

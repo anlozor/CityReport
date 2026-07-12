@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import BusquedaGestores from "../components/BusquedaGestores";
 import { buscarGestores } from "../services/usuariosService";
+import { sacarRoldelToken } from "../services/despiezarTokenService";
 
 function MenuHamburguesaGestor() {
     const [menuAbierto, setMenuAbierto] = useState(false);
@@ -20,6 +21,8 @@ function MenuHamburguesaGestor() {
 
     const timeoutRef = useRef(null);
     const controllerRef = useRef(null);
+
+    const rol = sacarRoldelToken();
 
     const toggleMenu = () => {
         setMenuAbierto(prev => !prev);
@@ -164,6 +167,15 @@ function MenuHamburguesaGestor() {
                         >
                             Buscar gestor
                         </button>
+
+                        {rol === 1 && (
+                            <button
+                                onClick={() => ir("/lista-usuarios")}
+                                style={menuItemStyle}
+                            >
+                                Lista de usuarios
+                            </button>
+                        )}
 
                         <button
                             onClick={() => {

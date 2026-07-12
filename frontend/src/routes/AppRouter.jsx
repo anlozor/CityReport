@@ -20,6 +20,7 @@ import MenuHamburguesaGestor from "../layouts/MenuHamburguesaGestor";
 import ActivarGestor from "../pages/ActivarGestor";
 import MapaGestor from "../pages/MapaGestor";
 import PanelAvanzado from "../pages/PanelAvanzado";
+import ListaUsuarios from "../pages/ListaUsuarios";
 
 function AppRouter(){
     return (
@@ -80,6 +81,10 @@ function AppRouter(){
                     <Route
                         path="/mapa-gestor"
                         element={<MapaGestor/>}
+                    />
+                    <Route
+                        path="/lista-usuarios"
+                        element={<ListaUsuarios/>}
                     />
                    
                 </Route>
